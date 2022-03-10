@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { CopyToClipboard } from '@nymproject/react';
 import { DelegationActions, DelegationListItemActions } from './DelegationActions';
 import { DelegateListItem } from './types';
 
@@ -134,6 +135,15 @@ export const DelegationList: React.FC<{
             stableSort(items, getComparator(order, orderBy)).map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
+                  <CopyToClipboard
+                    sx={{ fontSize: 16, mr: 1 }}
+                    value={item.id}
+                    tooltip={
+                      <>
+                        Copy identity key <strong>{item.id}</strong> to clipboard
+                      </>
+                    }
+                  />
                   <Tooltip
                     title={
                       <>
