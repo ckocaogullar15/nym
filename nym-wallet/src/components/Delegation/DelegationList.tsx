@@ -104,7 +104,7 @@ const EnhancedTableHead: React.FC<EnhancedTableProps> = ({ order, orderBy, onReq
             </TableSortLabel>
           </TableCell>
         ))}
-        <TableCell color="secondary">Actions</TableCell>
+        <TableCell />
       </TableRow>
     </TableHead>
   );
