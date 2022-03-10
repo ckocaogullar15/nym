@@ -150,6 +150,7 @@ export const DelegationList: React.FC<{
                         Click to view <strong>{item.id}</strong> in the Network Explorer
                       </>
                     }
+                    placement="right"
                     arrow
                   >
                     <Link
