@@ -9,7 +9,6 @@ export const Delegations: React.FC<{
   explorerUrl: string;
 }> = ({ items, rewardCurrency, explorerUrl }) => (
   <>
-    <h2>Your Delegations</h2>
     <Stack direction="row" justifyContent="space-between" alignItems="flex-end" spacing={2} mb={5}>
       <Box>
         Check list of mixnodes for uptime and performances to make delegation decisions{' '}
@@ -21,6 +20,6 @@ export const Delegations: React.FC<{
         New Delegation
       </Button>
     </Stack>
-    <DelegationList items={items} rewardCurrency={rewardCurrency} explorerUrl={explorerUrl} />
+    {items?.length ? <DelegationList items={items} rewardCurrency={rewardCurrency} explorerUrl={explorerUrl} /> : null}
   </>
 );
