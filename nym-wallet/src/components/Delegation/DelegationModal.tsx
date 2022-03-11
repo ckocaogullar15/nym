@@ -1,17 +1,6 @@
 import React from 'react';
 import { Box, Button, Link, Modal, Typography } from '@mui/material';
-
-const style = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 500,
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  borderRadius: '16px',
-  p: 4,
-};
+import { modalStyle } from '../Modals/styles';
 
 export type ActionType = 'delegate' | 'undelegate' | 'redeem' | 'redeem-all';
 
@@ -43,7 +32,7 @@ export const DelegationModal: React.FC<{
   if (status === 'error') {
     return (
       <Modal open={open} onClose={onClose}>
-        <Box sx={style} textAlign="center">
+        <Box sx={modalStyle} textAlign="center">
           <Typography color={(theme) => theme.palette.error.main} mb={1}>
             Oh no! Something went wrong...
           </Typography>
@@ -58,7 +47,7 @@ export const DelegationModal: React.FC<{
   }
   return (
     <Modal open={open} onClose={onClose}>
-      <Box sx={style} textAlign="center">
+      <Box sx={modalStyle} textAlign="center">
         <Typography color={(theme) => theme.palette.success.main} mb={1}>
           {actionToHeader(action)}
         </Typography>
