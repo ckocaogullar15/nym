@@ -46,6 +46,7 @@ export const RedeemAllRewards = () => {
       <RedeemModal
         open={open}
         onClose={() => setOpen(false)}
+        onOk={() => setOpen(false)}
         message="Redeem all rewards"
         currency="NYM"
         fee={0.004375}
