@@ -58,8 +58,8 @@ export const IdentityKeyFormField: React.FC<{
       fullWidth={fullWidth}
       InputProps={{
         readOnly,
-        startAdornment: showTickOnValid && value && validationError === undefined && (
-          <InputAdornment position="start">
+        endAdornment: showTickOnValid && value && validationError === undefined && (
+          <InputAdornment position="end">
             <DoneIcon color="success" />
           </InputAdornment>
         ),
