@@ -14,6 +14,7 @@ export const DelegationActions: React.FC<{
       <Button
         onClick={() => (onActionClick ? onActionClick('delegate') : undefined)}
         variant="contained"
+        disableElevation
         sx={{ maxWidth: BUTTON_SIZE, minWidth: BUTTON_SIZE, height: BUTTON_SIZE, padding: 0 }}
       >
         <Delegate fontSize="small" />
