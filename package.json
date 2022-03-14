@@ -9,7 +9,8 @@
     "explorer"
   ],
   "scripts": {
-    "build": "run-s build:packages",
+    "build": "run-s build:types build:packages",
+    "build:types": "lerna run --scope @nymproject/types build --stream",
     "build:packages": "lerna run --scope @nymproject/mui-theme --scope @nymproject/react --stream build",
     "build:react-example": "lerna run --scope @nymproject/react-webpack-with-theme-example build --stream",
     "build:playground": "lerna run --scope @nymproject/react storybook:build --stream",
