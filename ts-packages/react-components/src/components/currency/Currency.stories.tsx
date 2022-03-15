@@ -3,7 +3,7 @@ import { ComponentMeta } from '@storybook/react';
 import { Currency } from './Currency';
 
 export default {
-  title: 'Currency/Currency',
+  title: 'Currency/Currency display',
   component: Currency,
 } as ComponentMeta<typeof Currency>;
 
