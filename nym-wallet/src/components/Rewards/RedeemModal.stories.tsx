@@ -5,7 +5,7 @@ import { Button, Paper } from '@mui/material';
 import { RedeemModal } from './RedeemModal';
 
 export default {
-  title: 'Rewards/Redeem Modals',
+  title: 'Rewards/Components/Redeem Modals',
   component: RedeemModal,
 } as ComponentMeta<typeof RedeemModal>;
 

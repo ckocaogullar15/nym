@@ -8,7 +8,7 @@ import { items } from './DelegationList.stories';
 const explorerUrl = 'https://sandbox-explorer.nymtech.net';
 
 export default {
-  title: 'Delegation/Delegations',
+  title: 'Delegation/Components/Delegations',
   component: Delegations,
 } as ComponentMeta<typeof Delegations>;
 

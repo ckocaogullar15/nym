@@ -5,7 +5,7 @@ import { Paper } from '@mui/material';
 import { RewardsSummary } from './RewardsSummary';
 
 export default {
-  title: 'Rewards/Rewards Summary',
+  title: 'Rewards/Components/Rewards Summary',
   component: RewardsSummary,
 } as ComponentMeta<typeof RewardsSummary>;
 

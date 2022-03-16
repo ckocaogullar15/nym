@@ -5,7 +5,7 @@ import { DelegationList } from './DelegationList';
 import { DelegateListItem } from './types';
 
 export default {
-  title: 'Delegation/Delegation List',
+  title: 'Delegation/Components/Delegation List',
   component: DelegationList,
 } as ComponentMeta<typeof DelegationList>;
 

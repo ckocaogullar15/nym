@@ -9,7 +9,7 @@ import { DelegationModal } from './DelegationModal';
 const explorerUrl = 'https://sandbox-explorer.nymtech.net';
 
 export default {
-  title: 'Delegation/Delegation Modals',
+  title: 'Delegation/Components/Delegation Modals',
   component: Delegations,
 } as ComponentMeta<typeof Delegations>;
 

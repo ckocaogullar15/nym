@@ -5,7 +5,7 @@ import { DelegateModal } from './DelegateModal';
 import { UndelegateModal } from './UndelegateModal';
 
 export default {
-  title: 'Delegation/Action Modals',
+  title: 'Delegation/Components/Action Modals',
 };
 
 const Background: React.FC<{ onOpen: () => void }> = ({ onOpen }) => (
