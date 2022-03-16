@@ -1,5 +1,6 @@
 import React from 'react';
 import { Stack, Typography } from '@mui/material';
+import { CurrencyFormField, IdentityKeyFormField } from '@nymproject/react';
 import { SimpleModal } from '../Modals/SimpleModal';
 import { ModalDivider } from '../Modals/ModalDivider';
 import { ModalListItem } from './ModalListItem';
@@ -8,6 +9,7 @@ export const DelegateModal: React.FC<{
   open: boolean;
   onClose?: () => void;
   onOk?: () => void;
+  onIdentityKeyChanged?: (identityKey: string) => void;
   header?: string;
   buttonText?: string;
   rewardInterval: string;
@@ -19,6 +21,7 @@ export const DelegateModal: React.FC<{
   currency: string;
 }> = ({
   open,
+  onIdentityKeyChanged,
   onClose,
   onOk,
   header,
@@ -39,7 +42,11 @@ export const DelegateModal: React.FC<{
     subHeader="Delegate to mixnode"
     okLabel={buttonText || 'Delegate stake'}
   >
-    <Stack direction="row" justifyContent="space-between" mb={3}>
+    <IdentityKeyFormField required fullWidth placeholder="Node identity key" onChanged={onIdentityKeyChanged} />
+
+    <CurrencyFormField required fullWidth sx={{ mt: 2 }} placeholder="Amount" />
+
+    <Stack direction="row" justifyContent="space-between" my={3}>
       <Typography fontSize="larger" fontWeight={600}>
         Account balance
       </Typography>
