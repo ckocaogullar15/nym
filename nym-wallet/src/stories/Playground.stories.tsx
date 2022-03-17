@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ComponentMeta } from '@storybook/react';
-import { Playground } from '@nymproject/react';
+import { Playground } from '@nymproject/react/playground/Playground';
 
 export default {
   title: 'Playground',

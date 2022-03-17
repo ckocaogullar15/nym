@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { CopyToClipboard } from '@nymproject/react';
+import { CopyToClipboard } from '@nymproject/react/clipboard/CopyToClipboard';
 import { DelegationActions, DelegationListItemActions } from './DelegationActions';
 import { DelegateListItem } from './types';
 

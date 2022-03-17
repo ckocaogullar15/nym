@@ -1,8 +1,9 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2021",
     "lib": [
+      "es2021",
       "dom",
       "dom.iterable",
       "esnext"
@@ -13,7 +14,7 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "module": "esnext",
+    "module": "ES2020",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": false,

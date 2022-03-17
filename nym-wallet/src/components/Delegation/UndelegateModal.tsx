@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack, Typography } from '@mui/material';
-import { IdentityKeyFormField } from '@nymproject/react';
+import { IdentityKeyFormField } from '@nymproject/react/mixnodes/IdentityKeyFormField';
 import { SimpleModal } from '../Modals/SimpleModal';
 import { ModalDivider } from '../Modals/ModalDivider';
 

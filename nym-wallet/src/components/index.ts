@@ -14,5 +14,4 @@ export * from './NetworkSelector';
 export * from './ClientAddress';
 export * from './InfoToolTip';
 export * from './Title';
-export * from './Delegation';
 export * from './TokenPoolSelector';

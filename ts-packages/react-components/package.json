@@ -3,7 +3,19 @@
   "version": "1.0.0",
   "license": "Apache-2.0",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/components/*",
+    "./hooks/*": "./dist/hooks/*",
+    "./playground/*": "./dist/playground/*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["dist/components/*"],
+      "hooks/*": ["dist/hooks/*"],
+      "playground/*": ["dist/playground/*"]
+    }
+  },
   "peerDependencies": {
     "@cosmjs/math": "^0.27.1",
     "@mui/icons-material": ">= 5",
@@ -67,5 +79,6 @@
     "lint:fix": "eslint src .storybook --fix",
     "storybook": "start-storybook -p 6006",
     "storybook:build": "build-storybook"
-  }
+  },
+  "sideEffects": false
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Stack, Typography } from '@mui/material';
-import { CurrencyFormField, IdentityKeyFormField } from '@nymproject/react';
+import { IdentityKeyFormField } from '@nymproject/react/mixnodes/IdentityKeyFormField';
+import { CurrencyFormField } from '@nymproject/react/currency/CurrencyFormField';
 import { SimpleModal } from '../Modals/SimpleModal';
 import { ModalDivider } from '../Modals/ModalDivider';
 import { ModalListItem } from './ModalListItem';
