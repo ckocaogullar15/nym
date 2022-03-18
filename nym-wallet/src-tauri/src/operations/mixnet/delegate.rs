@@ -1,13 +1,27 @@
-use crate::coin::Coin;
+use crate::coin::{Coin, Denom};
 use crate::error::BackendError;
 use crate::nymd_client;
 use crate::state::State;
 use crate::utils::DelegationEvent;
 use crate::utils::DelegationResult;
 use cosmwasm_std::{Coin as CosmWasmCoin, Uint128};
-use mixnet_contract_common::{IdentityKey, PagedDelegatorDelegationsResponse};
+use mixnet_contract_common::Delegation;
+use mixnet_contract_common::IdentityKey;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
+
+#[cfg_attr(test, derive(ts_rs::TS))]
+#[cfg_attr(
+  test,
+  ts(export, export_to = "../src/types/rust/DelegationSummaryResponse.ts")
+)]
+#[derive(Deserialize, Serialize)]
+pub struct DelegationsSummaryResponse {
+  pub delegations: Vec<Delegation>,
+  pub total_delegations: Coin,
+  pub total_rewards: Coin,
+}
 
 #[tauri::command]
 pub async fn get_pending_delegation_events(
@@ -57,13 +71,14 @@ pub async fn undelegate_from_mixnode(
 }
 
 #[tauri::command]
-pub async fn get_reverse_mix_delegations_paged(
+pub async fn get_all_mix_delegations(
   state: tauri::State<'_, Arc<RwLock<State>>>,
-) -> Result<PagedDelegatorDelegationsResponse, BackendError> {
+) -> Result<Vec<Delegation>, BackendError> {
   Ok(
     nymd_client!(state)
-      .get_delegator_delegations_paged(nymd_client!(state).address().to_string(), None, None)
-      .await?,
+      .get_delegator_delegations_paged(nymd_client!(state).address().to_string(), None, None) // get all delegations, ignoring paging
+      .await?
+      .delegations,
   )
 }
 
@@ -79,4 +94,27 @@ pub async fn get_delegator_rewards(
       .get_delegator_rewards(address, mix_identity, proxy)
       .await?,
   )
+}
+
+#[tauri::command]
+pub async fn get_delegation_summary(
+  state: tauri::State<'_, Arc<RwLock<State>>>,
+) -> Result<DelegationsSummaryResponse, BackendError> {
+  let address = nymd_client!(state).address().to_string();
+
+  let delegations = get_all_mix_delegations(state.clone()).await?;
+  let mut total_delegations = Coin::new(0u128, &Denom::Minor);
+  let mut total_rewards = Coin::new(0u128, &Denom::Minor);
+
+  for d in delegations.clone() {
+    total_delegations = total_delegations + d.amount.into();
+    let reward = get_delegator_rewards(address.to_string(), d.node_identity, state.clone()).await?;
+    total_rewards = total_rewards + Coin::minor(reward);
+  }
+
+  Ok(DelegationsSummaryResponse {
+    delegations,
+    total_delegations,
+    total_rewards,
+  })
 }

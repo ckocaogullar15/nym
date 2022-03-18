@@ -32,12 +32,17 @@ export type TFee = {
   [EnumNodeType.gateway]?: Coin;
 };
 
+export type TPendingDelegation = {
+  block_height: number;
+};
+
 export type TDelegation = {
   owner: string;
   node_identity: string;
   amount: Coin;
   block_height: number;
-  proxy: string; // proxy address used to delegate the funds on behalf of anouther address
+  proxy: string; // proxy address used to delegate the funds on behalf of another address
+  pending?: TPendingDelegation;
 };
 
 export type TPagedDelegations = {

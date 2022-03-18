@@ -9,3 +9,4 @@ export * from './sign-in';
 export * from './settings';
 export * from './unbond';
 export * from './undelegate';
+export * from './delegation';

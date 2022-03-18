@@ -60,6 +60,8 @@ fn main() {
       mixnet::delegate::get_delegator_rewards,
       mixnet::delegate::get_pending_delegation_events,
       mixnet::delegate::get_reverse_mix_delegations_paged,
+      mixnet::delegate::get_delegation_summary,
+      mixnet::delegate::get_all_mix_delegations,
       mixnet::delegate::undelegate_from_mixnode,
       mixnet::epoch::get_current_epoch,
       mixnet::send::send,

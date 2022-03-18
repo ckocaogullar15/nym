@@ -13,4 +13,9 @@ export interface DelegateListItem {
   profitMarginPercentage: number;
   /** A number between 0 and 1 */
   uptimePercentage: number;
+  /** Is pending */
+  isPending?: {
+    /** Pending transaction */
+    blockHeight: number;
+  };
 }
