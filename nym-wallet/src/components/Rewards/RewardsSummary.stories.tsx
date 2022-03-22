@@ -11,6 +11,18 @@ export default {
 
 export const Default = () => (
   <Paper elevation={0} sx={{ px: 4, py: 2 }}>
-    <RewardsSummary totalDelegation={860.123} totalRewards={4.86723} currency="NYM" />
+    <RewardsSummary totalDelegation="860.123 NYM" totalRewards="4.86723 NYM" />
+  </Paper>
+);
+
+export const Empty = () => (
+  <Paper elevation={0} sx={{ px: 4, py: 2 }}>
+    <RewardsSummary />
+  </Paper>
+);
+
+export const Loading = () => (
+  <Paper elevation={0} sx={{ px: 4, py: 2 }}>
+    <RewardsSummary isLoading />
   </Paper>
 );

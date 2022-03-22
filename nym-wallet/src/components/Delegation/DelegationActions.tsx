@@ -14,9 +14,11 @@ export const DelegationActions: React.FC<{
   if (isPending) {
     return (
       <Box py={0.5} fontSize="inherit">
-        <Typography fontSize="inherit" color="text.disabled">
-          Pending {isPending.actionType === 'delegate' ? 'delegation' : 'undelegation'}...
-        </Typography>
+        <Tooltip title="There will be a new epoch roughly every hour when your changes will take effect" arrow>
+          <Typography fontSize="inherit" color="text.disabled">
+            Pending {isPending.actionType === 'delegate' ? 'delegation' : 'undelegation'}...
+          </Typography>
+        </Tooltip>
       </Box>
     );
   }

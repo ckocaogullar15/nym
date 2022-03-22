@@ -10,6 +10,7 @@ export const DelegateModal: React.FC<{
   open: boolean;
   onClose?: () => void;
   onOk?: () => void;
+  identityKey?: string;
   onIdentityKeyChanged?: (identityKey: string) => void;
   header?: string;
   buttonText?: string;
@@ -27,6 +28,7 @@ export const DelegateModal: React.FC<{
   onOk,
   header,
   buttonText,
+  identityKey,
   rewardInterval,
   accountBalance,
   fee,
@@ -43,9 +45,19 @@ export const DelegateModal: React.FC<{
     subHeader="Delegate to mixnode"
     okLabel={buttonText || 'Delegate stake'}
   >
-    <IdentityKeyFormField required fullWidth placeholder="Node identity key" onChanged={onIdentityKeyChanged} />
+    <IdentityKeyFormField
+      required
+      fullWidth
+      placeholder="Node identity key"
+      onChanged={onIdentityKeyChanged}
+      initialValue={identityKey}
+      readOnly={Boolean(identityKey)}
+      textFieldProps={{
+        autoFocus: !identityKey,
+      }}
+    />
 
-    <CurrencyFormField required fullWidth sx={{ mt: 2 }} placeholder="Amount" />
+    <CurrencyFormField required fullWidth sx={{ mt: 2 }} placeholder="Amount" autoFocus={Boolean(identityKey)} />
 
     <Stack direction="row" justifyContent="space-between" my={3}>
       <Typography fontSize="larger" fontWeight={600}>

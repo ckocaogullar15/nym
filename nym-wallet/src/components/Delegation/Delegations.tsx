@@ -1,25 +1,42 @@
 import React from 'react';
-import { Box, Button, Link, Stack } from '@mui/material';
+import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import { DelegateListItem } from './types';
 import { DelegationList } from './DelegationList';
+import { DelegationListItemActions } from './DelegationActions';
 
 export const Delegations: React.FC<{
+  isLoading?: boolean;
   items?: DelegateListItem[];
-  rewardCurrency: string;
   explorerUrl: string;
-}> = ({ items, rewardCurrency, explorerUrl }) => (
+  onShowNewDelegation?: () => void;
+  onDelegationItemActionClick?: (item: DelegateListItem, action: DelegationListItemActions) => void;
+}> = ({ isLoading, items, explorerUrl, onShowNewDelegation, onDelegationItemActionClick }) => (
   <>
     <Stack direction="row" justifyContent="space-between" alignItems="flex-end" spacing={2} mb={5}>
       <Box>
-        Check list of mixnodes for uptime and performances to make delegation decisions{' '}
-        <Link href={`${explorerUrl}/network-components/mixnodes/`} target="_blank" rel="noreferrer">
-          click here
+        <Link
+          href={`${explorerUrl}/network-components/mixnodes/`}
+          target="_blank"
+          rel="noreferrer"
+          underline="hover"
+          color={(theme) => theme.palette.text.primary}
+        >
+          Check the{' '}
+          <Typography color="primary.main" component="span">
+            list of mixnodes
+          </Typography>{' '}
+          for uptime and performance to make delegation decisions
         </Link>
       </Box>
-      <Button variant="contained" sx={{ py: 1.5, px: 5 }}>
+      <Button variant="contained" sx={{ py: 1.5, px: 5 }} onClick={onShowNewDelegation}>
         New Delegation
       </Button>
     </Stack>
-    {items?.length ? <DelegationList items={items} rewardCurrency={rewardCurrency} explorerUrl={explorerUrl} /> : null}
+    <DelegationList
+      isLoading={isLoading}
+      items={items}
+      explorerUrl={explorerUrl}
+      onItemActionClick={onDelegationItemActionClick}
+    />
   </>
 );

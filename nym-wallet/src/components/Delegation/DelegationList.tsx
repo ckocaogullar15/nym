@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Box,
+  CircularProgress,
   Link,
   Table,
   TableBody,
@@ -98,11 +99,11 @@ const EnhancedTableHead: React.FC<EnhancedTableProps> = ({ order, orderBy, onReq
 };
 
 export const DelegationList: React.FC<{
+  isLoading?: boolean;
   items?: DelegateListItem[];
-  rewardCurrency: string;
   onItemActionClick?: (item: DelegateListItem, action: DelegationListItemActions) => void;
   explorerUrl: string;
-}> = ({ items, rewardCurrency, onItemActionClick, explorerUrl }) => {
+}> = ({ isLoading, items, onItemActionClick, explorerUrl }) => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof DelegateListItem>('delegationDate');
 
@@ -150,12 +151,8 @@ export const DelegationList: React.FC<{
                   </Tooltip>
                 </TableCell>
                 <TableCell>{item.delegationDate.toLocaleDateString()}</TableCell>
-                <TableCell>
-                  {item.amount} {item.amountCurrency}
-                </TableCell>
-                <TableCell>
-                  {item.reward} {rewardCurrency}
-                </TableCell>
+                <TableCell>{item.amount}</TableCell>
+                <TableCell>{item.reward}</TableCell>
                 <TableCell>{Math.round(item.profitMarginPercentage * 100000) / 1000}%</TableCell>
                 <TableCell>{Math.round(item.uptimePercentage * 100000) / 1000}%</TableCell>
                 <TableCell>
@@ -170,7 +167,7 @@ export const DelegationList: React.FC<{
             <TableRow>
               <TableCell colSpan={7}>
                 <Box py={6} textAlign="center">
-                  You have not delegated to any mixnodes
+                  {isLoading ? <CircularProgress /> : <span>You have not delegated to any mixnodes</span>}
                 </Box>
               </TableCell>
             </TableRow>

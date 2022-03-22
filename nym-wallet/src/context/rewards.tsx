@@ -1,11 +1,10 @@
 import React, { createContext, FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Coin, Network } from '../types';
+import { Network } from '../types';
 
 type TRewardsContext = {
   isLoading: boolean;
-  network?: Network;
   error?: string;
-  totalRewards?: Coin;
+  totalRewards?: string;
   refresh: () => Promise<void>;
 };
 
@@ -20,7 +19,7 @@ export const RewardsContextProvider: FC<{
   const [currentNetwork, setCurrentNetwork] = useState<undefined | Network>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [totalRewards, setTotalRewards] = useState<undefined | Coin>();
+  const [totalRewards, setTotalRewards] = useState<undefined | string>();
 
   const resetState = () => {
     setIsLoading(true);
@@ -47,7 +46,6 @@ export const RewardsContextProvider: FC<{
 
   const memoizedValue = useMemo(
     () => ({
-      network: currentNetwork,
       isLoading,
       error,
       totalRewards,
@@ -59,4 +57,4 @@ export const RewardsContextProvider: FC<{
   return <RewardsContext.Provider value={memoizedValue}>{children}</RewardsContext.Provider>;
 };
 
-export const useRewardsContext = useContext<TRewardsContext>(RewardsContext);
+export const useRewardsContext = () => useContext<TRewardsContext>(RewardsContext);

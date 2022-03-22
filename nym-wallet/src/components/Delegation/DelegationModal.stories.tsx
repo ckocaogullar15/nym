@@ -18,12 +18,16 @@ const transactionUrl =
 const balance = '104 NYMT';
 const recipient = 'nymt1923pujepxfnv8dqyxqrl078s4ysf3xn2p7z2xa';
 
+const Content: React.FC = () => (
+  <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
+    <h2>Your Delegations</h2>
+    <Delegations items={items} explorerUrl={explorerUrl} />
+  </Paper>
+);
+
 export const DelegateSuccess = () => (
   <>
-    <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
-      <h2>Your Delegations</h2>
-      <Delegations items={items} rewardCurrency="NYM" explorerUrl={explorerUrl} />
-    </Paper>
+    <Content />
     <DelegationModal
       status="success"
       action="delegate"
@@ -38,10 +42,7 @@ export const DelegateSuccess = () => (
 
 export const UndelegateSuccess = () => (
   <>
-    <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
-      <h2>Your Delegations</h2>
-      <Delegations items={items} rewardCurrency="NYM" explorerUrl={explorerUrl} />
-    </Paper>
+    <Content />
     <DelegationModal
       status="success"
       action="undelegate"
@@ -56,10 +57,7 @@ export const UndelegateSuccess = () => (
 
 export const RedeemSuccess = () => (
   <>
-    <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
-      <h2>Your Delegations</h2>
-      <Delegations items={items} rewardCurrency="NYM" explorerUrl={explorerUrl} />
-    </Paper>
+    <Content />
     <DelegationModal
       status="success"
       action="redeem"
@@ -74,10 +72,7 @@ export const RedeemSuccess = () => (
 
 export const RedeemAllSuccess = () => (
   <>
-    <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
-      <h2>Your Delegations</h2>
-      <Delegations items={items} rewardCurrency="NYM" explorerUrl={explorerUrl} />
-    </Paper>
+    <Content />
     <DelegationModal
       status="success"
       action="redeem-all"
@@ -92,10 +87,7 @@ export const RedeemAllSuccess = () => (
 
 export const Error = () => (
   <>
-    <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
-      <h2>Your Delegations</h2>
-      <Delegations items={items} rewardCurrency="NYM" explorerUrl={explorerUrl} />
-    </Paper>
+    <Content />
     <DelegationModal
       status="error"
       action="redeem-all"

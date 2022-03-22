@@ -6,7 +6,7 @@ export type TDelegationContext = {
   isLoading: boolean;
   error?: string;
   delegations?: DelegateListItem[];
-  totalDelegations?: Coin;
+  totalDelegations?: string;
   refresh: () => Promise<void>;
   getDelegations: () => Promise<DelegateListItem[]>;
   addDelegation: (newDelegation: DelegateListItem) => Promise<void>;
@@ -30,7 +30,7 @@ export const DelegationContextProvider: FC<{
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [delegations, setDelegations] = useState<undefined | DelegateListItem[]>();
-  const [totalDelegations, setTotalDelegations] = useState<undefined | Coin>();
+  const [totalDelegations, setTotalDelegations] = useState<undefined | string>();
 
   // TODO: implement
   const getDelegations = async (): Promise<DelegateListItem[]> => [];

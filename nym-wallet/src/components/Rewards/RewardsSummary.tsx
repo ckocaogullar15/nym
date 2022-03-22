@@ -1,31 +1,43 @@
 import React from 'react';
-import { Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Button, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 export const RewardsSummary: React.FC<{
-  totalDelegation: number;
-  totalRewards: number;
-  currency: string;
+  isLoading?: boolean;
+  totalDelegation?: string;
+  totalRewards?: string;
   onClickRedeemAll?: () => void;
-}> = ({ totalDelegation, totalRewards, currency, onClickRedeemAll }) => (
-  <Stack direction="row" justifyContent="space-between" alignItems="center">
-    <Stack direction="row" spacing={4}>
-      <Stack direction="row" spacing={2}>
-        <Typography>Total delegation amount:</Typography>
-        <Typography fontWeight={600}>
-          {totalDelegation} {currency}
-        </Typography>
+}> = ({ isLoading, totalDelegation, totalRewards, onClickRedeemAll }) => {
+  const theme = useTheme();
+  return (
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack direction="row" spacing={4}>
+        <Stack direction="row" spacing={2}>
+          <Typography>Total delegation amount:</Typography>
+          <Typography fontWeight={600}>
+            {isLoading ? <CircularProgress size={theme.typography.fontSize} /> : totalDelegation || '-'}
+          </Typography>
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <Typography>Total rewards:</Typography>
+          <Typography fontWeight={600}>
+            {isLoading ? <CircularProgress size={theme.typography.fontSize} /> : totalRewards || '-'}
+          </Typography>
+        </Stack>
       </Stack>
-      <Stack direction="row" spacing={2}>
-        <Typography>Total rewards:</Typography>
-        <Typography fontWeight={600}>
-          {totalRewards} {currency}
-        </Typography>
-      </Stack>
+      <Tooltip title="Redeeming all rewards at once will be cheaper" arrow placement="left">
+        <span>
+          <Button
+            variant="outlined"
+            color="secondary"
+            size="large"
+            onClick={onClickRedeemAll}
+            disabled={!totalRewards || isLoading}
+          >
+            Redeem all rewards
+          </Button>
+        </span>
+      </Tooltip>
     </Stack>
-    <Tooltip title="Redeeming all rewards at once will be cheaper" arrow placement="left">
-      <Button variant="outlined" color="secondary" size="large" onClick={onClickRedeemAll}>
-        Redeem all rewards
-      </Button>
-    </Tooltip>
-  </Stack>
-);
+  );
+};

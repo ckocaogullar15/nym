@@ -15,13 +15,13 @@ export default {
 export const Default = () => (
   <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
     <h2>Your Delegations</h2>
-    <Delegations items={items} rewardCurrency="NYM" explorerUrl={explorerUrl} />
+    <Delegations items={items} explorerUrl={explorerUrl} />
   </Paper>
 );
 
 export const Empty = () => (
   <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
     <h2>Your Delegations</h2>
-    <Delegations items={[]} rewardCurrency="NYM" explorerUrl={explorerUrl} />
+    <Delegations items={[]} explorerUrl={explorerUrl} />
   </Paper>
 );

@@ -3,12 +3,10 @@ export interface DelegateListItem {
   id: string;
   /** Date of delegation */
   delegationDate: Date;
-  /** Delegated amount in decimal currency for network, e.g. 1.05 = 1.05 NYM on mainnet */
-  amount: number;
-  /** Amount currency */
-  amountCurrency: string;
-  /** Reward in decimal currency for network, e.g. 1.05 = 1.05 NYM on mainnet */
-  reward: number;
+  /** Delegated amount as a string including the currency, e.g. 1.05 NYM */
+  amount: string;
+  /** Reward amount as a string, e.g. 1.05 NYM on mainnet */
+  reward: string;
   /** A number between 0 and 1 */
   profitMarginPercentage: number;
   /** A number between 0 and 1 */
