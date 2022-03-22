@@ -14,8 +14,12 @@ export interface DelegateListItem {
   /** A number between 0 and 1 */
   uptimePercentage: number;
   /** Is pending */
-  isPending?: {
-    /** Pending transaction */
-    blockHeight: number;
-  };
+  isPending?: DelegateListItemPending;
+}
+
+export interface DelegateListItemPending {
+  /** Either the user is delegating or undelegating */
+  actionType: 'delegate' | 'undelegate';
+  /** Pending transaction */
+  blockHeight: number;
 }

@@ -9,3 +9,9 @@ export default {
 } as ComponentMeta<typeof DelegationActions>;
 
 export const Default = () => <DelegationActions />;
+
+export const PendingDelegation = () => <DelegationActions isPending={{ actionType: 'delegate', blockHeight: 1000 }} />;
+
+export const PendingUndelegation = () => (
+  <DelegationActions isPending={{ actionType: 'undelegate', blockHeight: 1000 }} />
+);

@@ -32,6 +32,7 @@ let mockDelegations: DelegateListItem[] = [
     reward: 0.00156,
     isPending: {
       blockHeight: 747363,
+      actionType: 'undelegate',
     },
   },
 ];

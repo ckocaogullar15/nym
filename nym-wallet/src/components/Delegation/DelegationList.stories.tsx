@@ -29,6 +29,10 @@ export const items: DelegateListItem[] = [
     uptimePercentage: 0.2323423424,
     profitMarginPercentage: 0.1,
     reward: 234.234,
+    isPending: {
+      actionType: 'delegate',
+      blockHeight: 1234,
+    },
   },
   {
     id: '6hn3z2yCQ3KP8XyqMRMV4c6DvYWG1vvrAWpgkxe1CV9C',
