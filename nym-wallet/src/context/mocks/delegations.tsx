@@ -1,7 +1,9 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import type { Coin } from '../../types';
-import { DelegationContext } from '../delegations';
+import { DelegationContext, TDelegationTransaction } from '../delegations';
 import type { DelegateListItem } from '../../components/Delegation/types';
+import { mockSleep } from './utils';
+
+const SLEEP_MS = 1000;
 
 let mockDelegations: DelegateListItem[] = [
   {
@@ -18,7 +20,6 @@ let mockDelegations: DelegateListItem[] = [
     amount: '1000000 NYM',
     uptimePercentage: 0.2323423424,
     profitMarginPercentage: 0.1,
-    reward: '234.234  NYM',
   },
   {
     id: '6hn3z2yCQ3KP8XyqMRMV4c6DvYWG1vvrAWpgkxe1CV9C',
@@ -31,38 +32,114 @@ let mockDelegations: DelegateListItem[] = [
 ];
 
 export const MockDelegationContextProvider: FC<{}> = ({ children }) => {
+  const [trigger, setTrigger] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [delegations, setDelegations] = useState<undefined | DelegateListItem[]>();
   const [totalDelegations, setTotalDelegations] = useState<undefined | string>();
 
+  const triggerStateUpdate = () => setTrigger(new Date());
+
   const getDelegations = async (): Promise<DelegateListItem[]> =>
     mockDelegations.sort((a, b) => a.id.localeCompare(b.id));
 
-  const addDelegation = async (newDelegation: DelegateListItem): Promise<void> => {
-    mockDelegations.push(newDelegation);
+  const recalculate = async () => {
+    const newDelegations = await getDelegations();
+    const newTotalDelegations = `${newDelegations.length * 100} NYM`;
+    setDelegations(newDelegations);
+    setTotalDelegations(newTotalDelegations);
   };
 
-  const updateDelegation = async (newDelegation: DelegateListItem): Promise<void> => {
+  const addDelegation = async (newDelegation: DelegateListItem): Promise<TDelegationTransaction> => {
+    await mockSleep(SLEEP_MS);
+    mockDelegations.push({ ...newDelegation, isPending: { blockHeight: 1111, actionType: 'delegate' } });
+    await recalculate();
+    triggerStateUpdate();
+
+    setTimeout(async () => {
+      mockDelegations = mockDelegations.map((d) => {
+        if (d.id === newDelegation.id) {
+          return { ...d, isPending: undefined };
+        }
+        return d;
+      });
+      await recalculate();
+      triggerStateUpdate();
+    }, 3000);
+
+    return {
+      transactionUrl:
+        'https://sandbox-blocks.nymtech.net/transactions/55303CD4B91FAC4C2715E40EBB52BB3B92829D9431B3A279D37B5CC58432E354',
+    };
+  };
+
+  const updateDelegation = async (
+    newDelegation: DelegateListItem,
+    ignorePendingForStorybook?: boolean,
+  ): Promise<TDelegationTransaction> => {
+    if (ignorePendingForStorybook) {
+      mockDelegations = mockDelegations.map((d) => {
+        if (d.id === newDelegation.id) {
+          return { ...newDelegation };
+        }
+        return d;
+      });
+      await recalculate();
+      triggerStateUpdate();
+      return {
+        transactionUrl:
+          'https://sandbox-blocks.nymtech.net/transactions/55303CD4B91FAC4C2715E40EBB52BB3B92829D9431B3A279D37B5CC58432E354',
+      };
+    }
+
+    await mockSleep(SLEEP_MS);
     mockDelegations = mockDelegations.map((d) => {
       if (d.id === newDelegation.id) {
         return { ...newDelegation, isPending: { blockHeight: 1234, actionType: 'delegate' } };
       }
       return d;
     });
+    await recalculate();
+    triggerStateUpdate();
+
+    setTimeout(async () => {
+      mockDelegations = mockDelegations.map((d) => {
+        if (d.id === newDelegation.id) {
+          return { ...d, isPending: undefined };
+        }
+        return d;
+      });
+      await recalculate();
+      triggerStateUpdate();
+    }, 3000);
+
+    return {
+      transactionUrl:
+        'https://sandbox-blocks.nymtech.net/transactions/55303CD4B91FAC4C2715E40EBB52BB3B92829D9431B3A279D37B5CC58432E354',
+    };
   };
 
-  const undelegate = async (mixnodeAddress: string): Promise<void> => {
+  const undelegate = async (mixnodeAddress: string): Promise<TDelegationTransaction> => {
+    await mockSleep(SLEEP_MS);
     mockDelegations = mockDelegations.map((d) => {
       if (d.id === mixnodeAddress) {
         return { ...d, isPending: { blockHeight: 5678, actionType: 'undelegate' } };
       }
       return d;
     });
+    await recalculate();
+    triggerStateUpdate();
 
-    setTimeout(() => {
-      mockDelegations = mockDelegations.filter((d) => d.id === mixnodeAddress);
+    setTimeout(async () => {
+      mockDelegations = mockDelegations.filter((d) => d.id !== mixnodeAddress);
+      await recalculate();
+      triggerStateUpdate();
     }, 3000);
+
+    return {
+      transactionUrl:
+        'https://sandbox-blocks.nymtech.net/transactions/55303CD4B91FAC4C2715E40EBB52BB3B92829D9431B3A279D37B5CC58432E354',
+    };
   };
 
   const resetState = () => {
@@ -76,11 +153,8 @@ export const MockDelegationContextProvider: FC<{}> = ({ children }) => {
     resetState();
     setTimeout(async () => {
       try {
-        const newDelegations = await getDelegations();
-        const newTotalDelegations = '678 NYM';
-        setDelegations(newDelegations);
-        setTotalDelegations(newTotalDelegations);
-        setIsLoading(false);
+        await mockSleep(SLEEP_MS);
+        await recalculate();
       } catch (e) {
         setError((e as Error).message);
       }
@@ -106,7 +180,7 @@ export const MockDelegationContextProvider: FC<{}> = ({ children }) => {
       updateDelegation,
       undelegate,
     }),
-    [isLoading, error, delegations, totalDelegations],
+    [isLoading, error, delegations, totalDelegations, trigger],
   );
 
   return <DelegationContext.Provider value={memoizedValue}>{children}</DelegationContext.Provider>;

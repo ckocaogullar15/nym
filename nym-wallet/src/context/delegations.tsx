@@ -9,18 +9,28 @@ export type TDelegationContext = {
   totalDelegations?: string;
   refresh: () => Promise<void>;
   getDelegations: () => Promise<DelegateListItem[]>;
-  addDelegation: (newDelegation: DelegateListItem) => Promise<void>;
-  updateDelegation: (newDelegation: DelegateListItem) => Promise<void>;
-  undelegate: (mixnodeAddress: string) => Promise<void>;
+  addDelegation: (newDelegation: DelegateListItem) => Promise<TDelegationTransaction>;
+  updateDelegation: (newDelegation: DelegateListItem) => Promise<TDelegationTransaction>;
+  undelegate: (mixnodeAddress: string) => Promise<TDelegationTransaction>;
+};
+
+export type TDelegationTransaction = {
+  transactionUrl: string;
 };
 
 export const DelegationContext = createContext<TDelegationContext>({
   isLoading: true,
   refresh: async () => undefined,
   getDelegations: async () => [],
-  addDelegation: async () => undefined,
-  updateDelegation: async () => undefined,
-  undelegate: async () => undefined,
+  addDelegation: async () => {
+    throw new Error('Not implemented');
+  },
+  updateDelegation: async () => {
+    throw new Error('Not implemented');
+  },
+  undelegate: async () => {
+    throw new Error('Not implemented');
+  },
 });
 
 export const DelegationContextProvider: FC<{
@@ -34,9 +44,15 @@ export const DelegationContextProvider: FC<{
 
   // TODO: implement
   const getDelegations = async (): Promise<DelegateListItem[]> => [];
-  const addDelegation = async () => undefined;
-  const updateDelegation = async () => undefined;
-  const undelegate = async () => undefined;
+  const addDelegation = async (): Promise<TDelegationTransaction> => {
+    throw new Error('Not implemented');
+  };
+  const updateDelegation = async (): Promise<TDelegationTransaction> => {
+    throw new Error('Not implemented');
+  };
+  const undelegate = async (): Promise<TDelegationTransaction> => {
+    throw new Error('Not implemented');
+  };
 
   const resetState = () => {
     setIsLoading(true);

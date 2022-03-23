@@ -95,7 +95,8 @@ export const CurrencyFormField: React.FC<{
     if (doValidation(newValue)) {
       setValue(Number.parseFloat(newValue));
       if (onChanged) {
-        onChanged(newValue);
+        // TODO: aaaaaaahhhhhh strings for currencies!
+        onChanged(`${newValue} ${denom}`);
       }
     }
   };

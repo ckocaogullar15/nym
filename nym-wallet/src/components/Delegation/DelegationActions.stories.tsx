@@ -10,6 +10,8 @@ export default {
 
 export const Default = () => <DelegationActions />;
 
+export const RedeemingDisabled = () => <DelegationActions disableRedeemingRewards />;
+
 export const PendingDelegation = () => <DelegationActions isPending={{ actionType: 'delegate', blockHeight: 1000 }} />;
 
 export const PendingUndelegation = () => (

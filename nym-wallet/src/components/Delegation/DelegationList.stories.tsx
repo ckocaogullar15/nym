@@ -26,7 +26,7 @@ export const items: DelegateListItem[] = [
     amount: '1000000 NYM',
     uptimePercentage: 0.2323423424,
     profitMarginPercentage: 0.1,
-    reward: '234.234  NYM',
+    reward: '234.234 NYM',
     isPending: {
       actionType: 'delegate',
       blockHeight: 1234,
@@ -38,7 +38,11 @@ export const items: DelegateListItem[] = [
     amount: '1 NYM',
     uptimePercentage: 1.0,
     profitMarginPercentage: 0.11,
-    reward: '0.00156 NYM',
+  },
+  {
+    id: '6hn3z2yCQ3KP8XyqMRMV4c6DvYWG1vvrAWpgkxe1CV9C',
+    delegationDate: new Date(2021, 1, 3),
+    amount: '1 NYM',
   },
 ];
 

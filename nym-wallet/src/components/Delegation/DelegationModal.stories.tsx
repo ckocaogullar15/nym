@@ -25,6 +25,13 @@ const Content: React.FC = () => (
   </Paper>
 );
 
+export const Loading = () => (
+  <>
+    <Content />
+    <DelegationModal status="loading" action="delegate" open />
+  </>
+);
+
 export const DelegateSuccess = () => (
   <>
     <Content />

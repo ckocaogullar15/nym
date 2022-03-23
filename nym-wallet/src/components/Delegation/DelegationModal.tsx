@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Link, Modal, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Link, Modal, Stack, Typography } from '@mui/material';
 import { modalStyle } from '../Modals/styles';
 
 export type ActionType = 'delegate' | 'undelegate' | 'redeem' | 'redeem-all';
@@ -19,16 +19,34 @@ const actionToHeader = (action: ActionType): string => {
   return 'Oh no! Something went wrong!';
 };
 
-export const DelegationModal: React.FC<{
-  status: 'success' | 'error';
+export type DelegationModalProps = {
+  status: 'loading' | 'success' | 'error';
   action: ActionType;
-  message: string;
-  recipient: string;
-  balance: string;
-  transactionUrl: string;
-  open: boolean;
-  onClose?: () => void;
-}> = ({ status, action, message, recipient, balance, transactionUrl, open, onClose, children }) => {
+  message?: string;
+  recipient?: string;
+  balance?: string;
+  transactionUrl?: string;
+};
+
+export const DelegationModal: React.FC<
+  DelegationModalProps & {
+    open: boolean;
+    onClose?: () => void;
+  }
+> = ({ status, action, message, recipient, balance, transactionUrl, open, onClose, children }) => {
+  if (status === 'loading') {
+    return (
+      <Modal open>
+        <Box sx={modalStyle} textAlign="center">
+          <Stack spacing={4} direction="row" alignItems="center">
+            <CircularProgress />
+            <Typography>Please wait...</Typography>
+          </Stack>
+        </Box>
+      </Modal>
+    );
+  }
+
   if (status === 'error') {
     return (
       <Modal open={open} onClose={onClose}>
@@ -53,9 +71,11 @@ export const DelegationModal: React.FC<{
         </Typography>
         <Typography mb={3}>{message}</Typography>
 
-        <Typography mb={1} fontSize="small" color={(theme) => theme.palette.text.secondary}>
-          Recipient: {recipient}
-        </Typography>
+        {recipient && (
+          <Typography mb={1} fontSize="small" color={(theme) => theme.palette.text.secondary}>
+            Recipient: {recipient}
+          </Typography>
+        )}
         <Typography mb={1} fontSize="small" color={(theme) => theme.palette.text.secondary}>
           Your current balance: {balance}
         </Typography>

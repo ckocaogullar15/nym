@@ -10,7 +10,8 @@ export const SimpleModal: React.FC<{
   header: string;
   subHeader?: string;
   okLabel: string;
-}> = ({ open, onClose, onOk, header, subHeader, okLabel, children }) => (
+  okDisabled?: boolean;
+}> = ({ open, onClose, okDisabled, onOk, header, subHeader, okLabel, children }) => (
   <Modal open={open} onClose={onClose}>
     <Box sx={modalStyle}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -27,7 +28,7 @@ export const SimpleModal: React.FC<{
 
       {children}
 
-      <Button variant="contained" fullWidth sx={{ mt: 3 }} size="large" onClick={onOk}>
+      <Button variant="contained" fullWidth sx={{ mt: 3 }} size="large" onClick={onOk} disabled={okDisabled}>
         {okLabel}
       </Button>
     </Box>

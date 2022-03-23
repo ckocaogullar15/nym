@@ -6,11 +6,11 @@ export interface DelegateListItem {
   /** Delegated amount as a string including the currency, e.g. 1.05 NYM */
   amount: string;
   /** Reward amount as a string, e.g. 1.05 NYM on mainnet */
-  reward: string;
+  reward?: string;
   /** A number between 0 and 1 */
-  profitMarginPercentage: number;
+  profitMarginPercentage?: number;
   /** A number between 0 and 1 */
-  uptimePercentage: number;
+  uptimePercentage?: number;
   /** Is pending */
   isPending?: DelegateListItemPending;
 }

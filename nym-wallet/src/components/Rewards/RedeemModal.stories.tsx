@@ -9,7 +9,9 @@ export default {
   component: RedeemModal,
 } as ComponentMeta<typeof RedeemModal>;
 
-const Content: React.FC = () => (
+const Content: React.FC<{
+  setOpen: (value: boolean) => void;
+}> = ({ setOpen }) => (
   <Paper elevation={0} sx={{ px: 4, pt: 2, pb: 4 }}>
     <h2>Lorem ipsum</h2>
     <Button variant="contained" onClick={() => setOpen(true)}>
@@ -46,7 +48,7 @@ export const RedeemAllRewards = () => {
   const [open, setOpen] = React.useState<boolean>(true);
   return (
     <>
-      <Content />
+      <Content setOpen={setOpen} />
       <RedeemModal
         open={open}
         onClose={() => setOpen(false)}
@@ -64,7 +66,7 @@ export const RedeemRewardForMixnode = () => {
   const [open, setOpen] = React.useState<boolean>(true);
   return (
     <>
-      <Content />
+      <Content setOpen={setOpen} />
       <RedeemModal
         open={open}
         onClose={() => setOpen(false)}

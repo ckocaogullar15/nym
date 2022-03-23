@@ -19,7 +19,7 @@ export const RewardsSummary: React.FC<{
           </Typography>
         </Stack>
         <Stack direction="row" spacing={2}>
-          <Typography>Total rewards:</Typography>
+          <Typography>Total unreedemed rewards:</Typography>
           <Typography fontWeight={600}>
             {isLoading ? <CircularProgress size={theme.typography.fontSize} /> : totalRewards || '-'}
           </Typography>

@@ -37,7 +37,7 @@ const headCells: HeadCell[] = [
   { id: 'id', label: 'Node ID', sortable: true },
   { id: 'delegationDate', label: 'Delegated on', sortable: true },
   { id: 'amount', label: 'Amount', sortable: true },
-  { id: 'reward', label: 'Reward', sortable: true },
+  { id: 'reward', label: 'Unredeemed Rewards', sortable: true },
   { id: 'profitMarginPercentage', label: 'Profit margin', sortable: true },
   { id: 'uptimePercentage', label: 'Uptime', sortable: true },
 ];
@@ -153,12 +153,17 @@ export const DelegationList: React.FC<{
                 <TableCell>{item.delegationDate.toLocaleDateString()}</TableCell>
                 <TableCell>{item.amount}</TableCell>
                 <TableCell>{item.reward}</TableCell>
-                <TableCell>{Math.round(item.profitMarginPercentage * 100000) / 1000}%</TableCell>
-                <TableCell>{Math.round(item.uptimePercentage * 100000) / 1000}%</TableCell>
+                <TableCell>
+                  {!item.profitMarginPercentage ? '-' : `${Math.round(item.profitMarginPercentage * 100000) / 1000}%`}
+                </TableCell>
+                <TableCell>
+                  {!item.uptimePercentage ? '-' : `${Math.round(item.uptimePercentage * 100000) / 1000}%`}
+                </TableCell>
                 <TableCell>
                   <DelegationActions
                     isPending={item.isPending}
                     onActionClick={(action) => (onItemActionClick ? onItemActionClick(item, action) : undefined)}
+                    disableRedeemingRewards={!item.reward}
                   />
                 </TableCell>
               </TableRow>
