@@ -48,14 +48,6 @@ module.exports = {
 
     config.resolve.alias['@tauri-apps/api'] = `${__dirname}/mocks/tauri`;
 
-    if(!config.resolve.alias) {
-      config.resolve.alias = {};
-    }
-
-    config.resolve.alias['@tauri-apps/api'] = `${__dirname}/mocks/tauri`;
-
-    console.log(config.resolve.alias);
-
     // Return the altered config
     return config;
   },
