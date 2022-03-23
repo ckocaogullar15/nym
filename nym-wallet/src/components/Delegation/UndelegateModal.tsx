@@ -54,7 +54,7 @@ export const UndelegateModal: React.FC<{
 
       <ModalDivider />
 
-      <Typography mb={5}>Undelegated tokens will be transferred to your main account.</Typography>
+      <Typography mb={5}>Undelegated tokens will be transferred to the account that you are logged in with</Typography>
 
       <Stack direction="row" justifyContent="space-between" mt={3}>
         <Typography color={(theme) => theme.palette.nym.fee}>Fee for this transaction:</Typography>

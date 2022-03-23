@@ -48,7 +48,7 @@ export const RedeemModal: React.FC<{
       <ModalDivider />
 
       <Typography mb={5} fontSize="smaller">
-        Rewards will be transferred to your main account.
+        Rewards will be transferred to the account that you are logged in with.
       </Typography>
 
       <Stack direction="row" justifyContent="space-between">
