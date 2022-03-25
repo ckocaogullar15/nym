@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api';
 import { VestingAccountInfo } from 'src/types/rust/vestingaccountinfo';
 import { majorToMinor, minorToMajor } from './coin';
 import {
@@ -11,46 +10,41 @@ import {
   Period,
   PledgeData,
 } from '../types';
+import { invokeWrapper } from './wrapper';
 
 export const getLockedCoins = async (): Promise<Coin> => {
-  const coin: Coin = await invoke('locked_coins');
-  const major = await minorToMajor(coin.amount);
-  return major;
+  const coin = await invokeWrapper<Coin>('locked_coins');
+  return minorToMajor(coin.amount);
 };
 
 export const getSpendableCoins = async (): Promise<Coin> => {
-  const coin: Coin = await invoke('spendable_coins');
-  const major = await minorToMajor(coin.amount);
-  return major;
+  const coin = await invokeWrapper<Coin>('spendable_coins');
+  return minorToMajor(coin.amount);
 };
 
 export const getVestingCoins = async (vestingAccountAddress: string): Promise<Coin> => {
-  const coin: Coin = await invoke('vesting_coins', { vestingAccountAddress });
-  const major = await minorToMajor(coin.amount);
-  return major;
+  const coin = await invokeWrapper<Coin>('vesting_coins', { vestingAccountAddress });
+  return minorToMajor(coin.amount);
 };
 
 export const getVestedCoins = async (vestingAccountAddress: string): Promise<Coin> => {
-  const coin: Coin = await invoke('vested_coins', { vestingAccountAddress });
-  const major = await minorToMajor(coin.amount);
-  return major;
+  const coin = await invokeWrapper<Coin>('vested_coins', { vestingAccountAddress });
+  return minorToMajor(coin.amount);
 };
 
 export const getOriginalVesting = async (vestingAccountAddress: string): Promise<OriginalVestingResponse> => {
-  const res: OriginalVestingResponse = await invoke('original_vesting', { vestingAccountAddress });
+  const res = await invokeWrapper<OriginalVestingResponse>('original_vesting', { vestingAccountAddress });
   const major = await minorToMajor(res.amount.amount);
   return { ...res, amount: major };
 };
 
 export const withdrawVestedCoins = async (amount: string): Promise<void> => {
   const minor = await majorToMinor(amount);
-  await invoke('withdraw_vested_coins', { amount: { amount: minor.amount, denom: 'Minor' } });
+  await invokeWrapper('withdraw_vested_coins', { amount: { amount: minor.amount, denom: 'Minor' } });
 };
 
-export const getCurrentVestingPeriod = async (address: string): Promise<Period> => {
-  const res: Period = await invoke('get_current_vesting_period', { address });
-  return res;
-};
+export const getCurrentVestingPeriod = async (address: string) =>
+  invokeWrapper<Period>('get_current_vesting_period', { address });
 
 export const vestingBond = async ({
   type,
@@ -62,34 +56,18 @@ export const vestingBond = async ({
   data: MixNode | Gateway;
   pledge: Coin;
   ownerSignature: string;
-}): Promise<void> => {
-  await invoke(`vesting_bond_${type}`, { [type]: data, ownerSignature, pledge });
-};
+}) => invokeWrapper<void>(`vesting_bond_${type}`, { [type]: data, ownerSignature, pledge });
 
-export const vestingUnbond = async (type: EnumNodeType): Promise<void> => {
-  await invoke(`vesting_unbond_${type}`);
-};
+export const vestingUnbond = async (type: EnumNodeType) => invokeWrapper<void>(`vesting_unbond_${type}`);
 
-export const vestingDelegateToMixnode = async ({
-  identity,
-  amount,
-}: {
-  identity: string;
-  amount: Coin;
-}): Promise<DelegationResult> => {
-  const res: DelegationResult = await invoke('vesting_delegate_to_mixnode', { identity, amount });
-  return res;
-};
+export const vestingDelegateToMixnode = async ({ identity, amount }: { identity: string; amount: Coin }) =>
+  invokeWrapper<DelegationResult>('vesting_delegate_to_mixnode', { identity, amount });
 
-export const vestingUnelegateFromMixnode = async (identity: string): Promise<DelegationResult> => {
-  const res: DelegationResult = await invoke('vesting_undelegate_from_mixnode', { identity });
-  return res;
-};
+export const vestingUnelegateFromMixnode = async (identity: string) =>
+  invokeWrapper<DelegationResult>('vesting_undelegate_from_mixnode', { identity });
 
-export const getVestingAccountInfo = async (address: string): Promise<VestingAccountInfo> => {
-  const res: VestingAccountInfo = await invoke('get_account_info', { address });
-  return res;
-};
+export const getVestingAccountInfo = async (address: string) =>
+  invokeWrapper<VestingAccountInfo>('get_account_info', { address });
 
 export const getVestingPledgeInfo = async ({
   address,
@@ -99,18 +77,14 @@ export const getVestingPledgeInfo = async ({
   type: EnumNodeType;
 }): Promise<PledgeData | undefined> => {
   try {
-    const res: PledgeData = await invoke(`vesting_get_${type}_pledge`, { address });
-    return res;
+    return await invokeWrapper<PledgeData>(`vesting_get_${type}_pledge`, { address });
   } catch (e) {
     return undefined;
   }
 };
 
-export const vestingUpdateMixnode = async (profitMarginPercent: number): Promise<void> => {
-  await invoke('vesting_update_mixnode', { profitMarginPercent });
-};
+export const vestingUpdateMixnode = async (profitMarginPercent: number) =>
+  invokeWrapper<void>('vesting_update_mixnode', { profitMarginPercent });
 
-export const vestingDelegatedFree = async (vestingAccountAddress: string): Promise<Coin> => {
-  const res: Coin = await invoke('delegated_free', { vestingAccountAddress });
-  return res;
-};
+export const vestingDelegatedFree = async (vestingAccountAddress: string) =>
+  invokeWrapper<Coin>('delegated_free', { vestingAccountAddress });

@@ -1,27 +1,15 @@
-import { invoke } from '@tauri-apps/api';
 import { Console } from '../utils/console';
 import { Coin, DelegationResult, EnumNodeType, TauriTxResult, TBondArgs } from '../types';
+import { invokeWrapper } from './wrapper';
 
 export const bond = async ({ type, data, pledge, ownerSignature }: TBondArgs): Promise<any> => {
-  await invoke(`bond_${type}`, { [type]: data, ownerSignature, pledge });
+  await invokeWrapper<any>(`bond_${type}`, { [type]: data, ownerSignature, pledge });
 };
 
-export const unbond = async (type: EnumNodeType): Promise<void> => {
-  await invoke(`unbond_${type}`);
-};
+export const unbond = async (type: EnumNodeType) => invokeWrapper<void>(`unbond_${type}`);
 
-export const delegate = async ({
-  type,
-  identity,
-  amount,
-}: {
-  type: EnumNodeType;
-  identity: string;
-  amount: Coin;
-}): Promise<DelegationResult> => {
-  const res: DelegationResult = await invoke(`delegate_to_${type}`, { identity, amount });
-  return res;
-};
+export const delegate = async ({ type, identity, amount }: { type: EnumNodeType; identity: string; amount: Coin }) =>
+  invokeWrapper<DelegationResult>(`delegate_to_${type}`, { identity, amount });
 
 export const undelegate = async ({
   type,
@@ -31,19 +19,15 @@ export const undelegate = async ({
   identity: string;
 }): Promise<DelegationResult | undefined> => {
   try {
-    const res: DelegationResult = await invoke(`undelegate_from_${type}`, { identity });
-    return res;
+    return await invokeWrapper<DelegationResult>(`undelegate_from_${type}`, { identity });
   } catch (e) {
-    Console.log(e as string);
+    Console.error(`undelegate_from_${type}`, e as string);
     return undefined;
   }
 };
 
-export const send = async (args: { amount: Coin; address: string; memo: string }): Promise<TauriTxResult> => {
-  const res: TauriTxResult = await invoke('send', args);
-  return res;
-};
+export const send = async (args: { amount: Coin; address: string; memo: string }) =>
+  invokeWrapper<TauriTxResult>('send', args);
 
-export const updateMixnode = async (profitMarginPercent: number): Promise<void> => {
-  await invoke('update_mixnode', { profitMarginPercent });
-};
+export const updateMixnode = async (profitMarginPercent: number) =>
+  invokeWrapper<void>('update_mixnode', { profitMarginPercent });
