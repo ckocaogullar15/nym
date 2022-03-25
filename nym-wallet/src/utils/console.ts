@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { config } from '../../config';
+import { config } from '../config';
 
 export const Console = {
   log: (output: string) => (config.IS_DEV_MODE ? console.log(output) : undefined),
