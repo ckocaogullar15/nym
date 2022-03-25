@@ -2,7 +2,9 @@
 import { config } from '../config';
 
 export const Console = {
-  log: (output: string) => (config.IS_DEV_MODE ? console.log(output) : undefined),
-  warn: (output: string) => (config.IS_DEV_MODE ? console.warn(output) : undefined),
-  error: (output: string) => console.error(output),
+  log: (message?: any, ...optionalParams: any[]) =>
+    config.IS_DEV_MODE ? console.log(message, ...optionalParams) : undefined,
+  warn: (message?: any, ...optionalParams: any[]) =>
+    config.IS_DEV_MODE ? console.warn(message, ...optionalParams) : undefined,
+  error: (message?: any, ...optionalParams: any[]) => console.error(message, ...optionalParams),
 };
