@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Modal, Stack, Typography } from '@mui/material';
+import { Box, Button, Modal, Stack, SxProps, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { modalStyle } from './styles';
 
@@ -11,9 +11,10 @@ export const SimpleModal: React.FC<{
   subHeader?: string;
   okLabel: string;
   okDisabled?: boolean;
-}> = ({ open, onClose, okDisabled, onOk, header, subHeader, okLabel, children }) => (
+  sx?: SxProps;
+}> = ({ open, onClose, okDisabled, onOk, header, subHeader, okLabel, sx, children }) => (
   <Modal open={open} onClose={onClose}>
-    <Box sx={modalStyle}>
+    <Box sx={{ ...modalStyle, ...sx }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography fontSize={22} fontWeight={600}>
           {header}

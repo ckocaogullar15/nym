@@ -14,9 +14,10 @@ export const CurrencyFormField: React.FC<{
   readOnly?: boolean;
   showCoinMark?: boolean;
   initialValue?: number;
+  validationError?: string;
   placeholder?: string;
   denom?: 'NYM' | 'NYMT';
-  onChanged?: (newValue: string) => void;
+  onChanged?: (newValue: string, newAmount: number, denom: string) => void;
   onValidate?: (isValid: boolean, error?: string) => void;
   sx?: SxProps;
 }> = ({
@@ -26,6 +27,7 @@ export const CurrencyFormField: React.FC<{
   fullWidth,
   readOnly,
   initialValue,
+  validationError: validationErrorProp,
   onChanged,
   onValidate,
   sx,
@@ -34,7 +36,11 @@ export const CurrencyFormField: React.FC<{
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [value, setValue] = React.useState<number | undefined>(initialValue);
-  const [validationError, setValidationError] = React.useState<string | undefined>();
+  const [validationError, setValidationError] = React.useState<string | undefined>(validationErrorProp);
+
+  React.useEffect(() => {
+    setValidationError(validationErrorProp);
+  }, [validationErrorProp]);
 
   const fireOnValidate = (result: boolean) => {
     if (onValidate) {
@@ -44,6 +50,12 @@ export const CurrencyFormField: React.FC<{
   };
 
   const doValidation = (newValue?: string | number): boolean => {
+    // the external validation error is set, so it overrides internal validation messages
+    if (validationErrorProp) {
+      setValidationError(validationErrorProp);
+      return false;
+    }
+
     // handle empty value
     if (!newValue) {
       setValue(undefined);
@@ -92,12 +104,13 @@ export const CurrencyFormField: React.FC<{
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
 
-    if (doValidation(newValue)) {
-      setValue(Number.parseFloat(newValue));
-      if (onChanged) {
-        // TODO: aaaaaaahhhhhh strings for currencies!
-        onChanged(`${newValue} ${denom}`);
-      }
+    doValidation(newValue);
+
+    const newAmount = Number.parseFloat(newValue);
+    setValue(newAmount);
+    if (onChanged) {
+      // TODO: aaaaaaahhhhhh strings for currencies!
+      onChanged(`${newValue} ${denom}`, newAmount, denom);
     }
   };
 

@@ -244,7 +244,7 @@ export const DelegationPage: FC = () => {
           buttonText="Delegate stake"
           currency="NYM"
           fee={0.004375}
-          minimum={100}
+          estimatedMonthlyReward={50.123}
           accountBalance={425.2345053}
           nodeUptimePercentage={99.28394}
           profitMarginPercentage={11.12334234}
@@ -262,7 +262,7 @@ export const DelegationPage: FC = () => {
           identityKey={currentDelegationListActionItem.id}
           currency="NYM"
           fee={0.004375}
-          minimum={100}
+          estimatedMonthlyReward={50.123}
           accountBalance={425.2345053}
           nodeUptimePercentage={99.28394}
           profitMarginPercentage={11.12334234}

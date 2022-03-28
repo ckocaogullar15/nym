@@ -7,22 +7,25 @@ import { ModalDivider } from '../Modals/ModalDivider';
 import { ModalListItem } from './ModalListItem';
 import { validateAmount, validateKey } from '../../utils';
 
+const MIN_AMOUNT_TO_DELEGATE = 10;
+
 export const DelegateModal: React.FC<{
   open: boolean;
   onClose?: () => void;
-  onOk?: (identityKey?: string, amount?: string) => void;
+  onOk?: (identityKey?: string, amount?: number) => void;
   identityKey?: string;
   onIdentityKeyChanged?: (identityKey: string) => void;
-  onAmountChanged?: (amount: string) => void;
+  onAmountChanged?: (amount: number) => void;
   header?: string;
   buttonText?: string;
   rewardInterval: string;
   accountBalance: number;
-  minimum: number;
+  estimatedMonthlyReward: number;
   profitMarginPercentage: number;
   nodeUptimePercentage: number;
   fee: number;
   currency: string;
+  initialAmount?: number;
 }> = ({
   open,
   onIdentityKeyChanged,
@@ -35,26 +38,30 @@ export const DelegateModal: React.FC<{
   rewardInterval,
   accountBalance,
   fee,
-  minimum,
+  estimatedMonthlyReward,
   currency,
   profitMarginPercentage,
   nodeUptimePercentage,
+  initialAmount,
 }) => {
   const [identityKey, setIdentityKey] = useState<string | undefined>(initialIdentityKey);
-  const [amount, setAmount] = useState<string | undefined>();
+  const [amount, setAmount] = useState<number | undefined>(initialAmount);
   const [isValidated, setValidated] = useState<boolean>(false);
+  const [errorAmount, setErrorAmount] = useState<string | undefined>();
 
-  const validate = useCallback(() => {
+  const validate = () => {
+    let newValidatedValue = true;
     if (!identityKey || !validateKey(identityKey, 32)) {
-      setValidated(false);
-      return;
+      newValidatedValue = false;
     }
-    if (!amount || !validateAmount(amount, `${minimum}`)) {
-      setValidated(false);
-      return;
+    if (amount && Number(amount) < MIN_AMOUNT_TO_DELEGATE) {
+      setErrorAmount(`Min. delegation amount: ${MIN_AMOUNT_TO_DELEGATE} ${currency}`);
+      newValidatedValue = false;
+    } else {
+      setErrorAmount(undefined);
     }
-    setValidated(true);
-  }, [amount, identityKey]);
+    setValidated(newValidatedValue);
+  };
 
   const handleOk = () => {
     if (onOk) {
@@ -67,16 +74,18 @@ export const DelegateModal: React.FC<{
     if (onIdentityKeyChanged) {
       onIdentityKeyChanged(newIdentityKey);
     }
-    validate();
   };
 
-  const handleAmountChanged = (newAmount: string) => {
+  const handleAmountChanged = (newValue: string, newAmount: number) => {
     setAmount(newAmount);
     if (onAmountChanged) {
       onAmountChanged(newAmount);
     }
-    validate();
   };
+
+  React.useEffect(() => {
+    validate();
+  }, [amount, identityKey]);
 
   return (
     <SimpleModal
@@ -105,15 +114,15 @@ export const DelegateModal: React.FC<{
         fullWidth
         sx={{ mt: 2 }}
         placeholder="Amount"
+        initialValue={initialAmount}
+        validationError={errorAmount}
         autoFocus={Boolean(initialIdentityKey)}
         onChanged={handleAmountChanged}
       />
 
       <Stack direction="row" justifyContent="space-between" my={3}>
-        <Typography fontSize="larger" fontWeight={600}>
-          Account balance
-        </Typography>
-        <Typography fontSize="larger" fontWeight={600}>
+        <Typography fontWeight={600}>Account balance</Typography>
+        <Typography fontWeight={600}>
           {accountBalance} {currency}
         </Typography>
       </Stack>
@@ -124,11 +133,16 @@ export const DelegateModal: React.FC<{
       <ModalDivider />
       <ModalListItem label="Node uptime" value={`${Math.round(nodeUptimePercentage * 10000) / 100}%`} />
       <ModalDivider />
-      <ModalListItem label="Minimum to delegate" value={`${minimum} ${currency}`} />
+      <ModalListItem
+        label="Est. monthly reward for 10 NYM delegation "
+        value={`${estimatedMonthlyReward} ${currency}`}
+      />
 
       <Stack direction="row" justifyContent="space-between" mt={4}>
-        <Typography color={(theme) => theme.palette.nym.fee}>Fee for this transaction:</Typography>
-        <Typography color={(theme) => theme.palette.nym.fee}>
+        <Typography fontSize="smaller" color={(theme) => theme.palette.nym.fee}>
+          Fee for this transaction:
+        </Typography>
+        <Typography fontSize="smaller" color={(theme) => theme.palette.nym.fee}>
           {fee} {currency}
         </Typography>
       </Stack>

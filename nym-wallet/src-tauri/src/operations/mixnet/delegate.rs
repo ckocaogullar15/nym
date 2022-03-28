@@ -11,11 +11,11 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-#[cfg_attr(test, derive(ts_rs::TS))]
-#[cfg_attr(
-  test,
-  ts(export, export_to = "../src/types/rust/DelegationSummaryResponse.ts")
-)]
+// #[cfg_attr(test, derive(ts_rs::TS))]
+// #[cfg_attr(
+//   test,
+//   ts(export, export_to = "../src/types/rust/DelegationSummaryResponse.ts")
+// )]
 #[derive(Deserialize, Serialize)]
 pub struct DelegationsSummaryResponse {
   pub delegations: Vec<Delegation>,

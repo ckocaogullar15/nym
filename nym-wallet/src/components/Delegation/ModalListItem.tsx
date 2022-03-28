@@ -6,7 +6,7 @@ export const ModalListItem: React.FC<{
   value: React.ReactNode;
 }> = ({ label, value }) => (
   <Stack direction="row" justifyContent="space-between">
-    <Typography>{label}:</Typography>
-    <Typography>{value}</Typography>
+    <Typography fontSize="smaller">{label}:</Typography>
+    <Typography fontSize="smaller">{value}</Typography>
   </Stack>
 );

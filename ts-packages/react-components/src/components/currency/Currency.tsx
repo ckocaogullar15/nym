@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Coin, printableCoin } from '@nymproject/types';
+import type { Coin } from '@nymproject/types';
+import { printableCoin } from '@nymproject/types';
 
 export const Currency: React.FC<{
   coin?: Coin;

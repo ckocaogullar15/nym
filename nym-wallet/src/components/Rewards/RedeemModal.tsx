@@ -1,8 +1,8 @@
 import React from 'react';
-import { Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Stack, Typography } from '@mui/material';
 import { IdentityKeyFormField } from '@nymproject/react/mixnodes/IdentityKeyFormField';
+import WarningIcon from '@mui/icons-material/Warning';
 import { SimpleModal } from '../Modals/SimpleModal';
-import { ModalDivider } from '../Modals/ModalDivider';
 
 export const RedeemModal: React.FC<{
   open: boolean;
@@ -38,17 +38,8 @@ export const RedeemModal: React.FC<{
         </Typography>
       </Stack>
 
-      <Stack direction="row" justifyContent="space-between">
-        <Typography fontSize="smaller">Minimum reward to redeem:</Typography>
-        <Typography fontSize="smaller">
-          {minimum || '1'} {currency}
-        </Typography>
-      </Stack>
-
-      <ModalDivider />
-
       <Typography mb={5} fontSize="smaller">
-        Rewards will be transferred to the account that you are logged in with.
+        Rewards will be transferred to account you are logged in with now
       </Typography>
 
       <Stack direction="row" justifyContent="space-between">
@@ -59,6 +50,13 @@ export const RedeemModal: React.FC<{
           {fee} {currency}
         </Typography>
       </Stack>
+
+      {amount < fee && (
+        <Alert color="warning" sx={{ mt: 3 }} icon={<WarningIcon />}>
+          <AlertTitle>Warning: fees are greater than the reward</AlertTitle>
+          The fees for redeeming rewards will cost more than the rewards. Are you sure you want to continue?
+        </Alert>
+      )}
     </SimpleModal>
   );
 };

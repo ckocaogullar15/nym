@@ -80,3 +80,40 @@ export const RedeemRewardForMixnode = () => {
     </>
   );
 };
+
+export const FeeIsMoreThanAllRewards = () => {
+  const [open, setOpen] = React.useState<boolean>(true);
+  return (
+    <>
+      <Content setOpen={setOpen} />
+      <RedeemModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onOk={() => setOpen(false)}
+        message="Redeem all rewards"
+        currency="NYM"
+        fee={0.004375}
+        amount={0.001}
+      />
+    </>
+  );
+};
+
+export const FeeIsMoreThanMixnodeReward = () => {
+  const [open, setOpen] = React.useState<boolean>(true);
+  return (
+    <>
+      <Content setOpen={setOpen} />
+      <RedeemModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onOk={() => setOpen(false)}
+        identityKey="D88RfeY8DttMD3CQKoayV6mss5a5FC3RoH75Kmcujaaa"
+        message="Redeem rewards"
+        currency="NYM"
+        fee={0.004375}
+        amount={0.001}
+      />
+    </>
+  );
+};

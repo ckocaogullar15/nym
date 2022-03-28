@@ -52,11 +52,33 @@ export const Delegate = () => {
         onOk={() => setOpen(false)}
         currency="NYM"
         fee={0.004375}
-        minimum={100}
+        estimatedMonthlyReward={50.423}
         accountBalance={425.2345053}
         nodeUptimePercentage={99.28394}
         profitMarginPercentage={11.12334234}
         rewardInterval="weekly"
+      />
+    </>
+  );
+};
+
+export const DelegateBelowMinimum = () => {
+  const [open, setOpen] = React.useState<boolean>(true);
+  return (
+    <>
+      <Background onOpen={() => setOpen(true)} />
+      <DelegateModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onOk={() => setOpen(false)}
+        currency="NYM"
+        fee={0.004375}
+        estimatedMonthlyReward={50.423}
+        accountBalance={425.2345053}
+        nodeUptimePercentage={99.28394}
+        profitMarginPercentage={11.12334234}
+        rewardInterval="weekly"
+        initialAmount={0.1}
       />
     </>
   );
@@ -75,7 +97,7 @@ export const DelegateMore = () => {
         buttonText="Delegate more"
         currency="NYM"
         fee={0.004375}
-        minimum={100}
+        estimatedMonthlyReward={50.423}
         accountBalance={425.2345053}
         nodeUptimePercentage={99.28394}
         profitMarginPercentage={11.12334234}
@@ -96,7 +118,6 @@ export const Undelegate = () => {
         onOk={() => setOpen(false)}
         currency="NYM"
         fee={0.004375}
-        minimum={5}
         amount={150}
         identityKey="AA6RfeY8DttMD3CQKoayV6mss5a5FC3RoH75Kmcujyxx"
       />
