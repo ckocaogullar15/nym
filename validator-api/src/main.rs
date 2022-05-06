@@ -10,19 +10,17 @@ use crate::network_monitor::NetworkMonitorBuilder;
 use crate::node_status_api::uptime_updater::HistoricalUptimeUpdater;
 use crate::nymd_client::Client;
 use crate::storage::ValidatorApiStorage;
-use ::config::defaults::DEFAULT_NETWORK;
 use ::config::NymConfig;
 use anyhow::Result;
 use clap::{crate_version, App, Arg, ArgMatches};
 use contract_cache::ValidatorCache;
 use log::{info, warn};
-use okapi::openapi3::OpenApi;
 use rocket::fairing::AdHoc;
 use rocket::http::Method;
 use rocket::{Ignite, Rocket};
 use rocket_cors::{AllowedHeaders, AllowedOrigins, Cors};
-use rocket_okapi::mount_endpoints_and_merged_docs;
-use rocket_okapi::swagger_ui::make_swagger_ui;
+use rocket_okapi::settings::UrlObject;
+use rocket_okapi::swagger_ui::SwaggerUIConfig;
 use std::process;
 use std::sync::Arc;
 use std::time::Duration;
@@ -43,7 +41,6 @@ mod node_status_api;
 pub(crate) mod nymd_client;
 mod rewarded_set_updater;
 pub(crate) mod storage;
-mod swagger;
 
 #[cfg(feature = "coconut")]
 mod coconut;
@@ -95,7 +92,6 @@ fn long_version() -> String {
 {:<20}{}
 {:<20}{}
 {:<20}{}
-{:<20}{}
 "#,
         "Build Timestamp:",
         env!("VERGEN_BUILD_TIMESTAMP"),
@@ -113,8 +109,6 @@ fn long_version() -> String {
         env!("VERGEN_RUSTC_CHANNEL"),
         "cargo Profile:",
         env!("VERGEN_CARGO_PROFILE"),
-        "Network:",
-        DEFAULT_NETWORK
     )
 }
 
@@ -404,22 +398,8 @@ async fn setup_rocket(
     liftoff_notify: Arc<Notify>,
     _nymd_client: Option<Client<SigningNymdClient>>,
 ) -> Result<Rocket<Ignite>> {
-    let openapi_settings = rocket_okapi::settings::OpenApiSettings::default();
-    let mut rocket = rocket::build();
-
-    let custom_route_spec = (vec![], custom_openapi_spec());
-
-    mount_endpoints_and_merged_docs! {
-        rocket,
-        "/v1".to_owned(),
-        openapi_settings,
-        "/" => custom_route_spec,
-        "" => contract_cache::validator_cache_routes(&openapi_settings),
-        "/status" => node_status_api::node_status_routes(&openapi_settings, config.get_network_monitor_enabled()),
-    }
-
-    let rocket = rocket
-        .mount("/swagger", make_swagger_ui(&swagger::get_docs()))
+    // let's build our rocket!
+    let rocket = rocket::build()
         .attach(setup_cors()?)
         .attach(setup_liftoff_notify(liftoff_notify))
         .attach(ValidatorCache::stage());
@@ -443,43 +423,30 @@ async fn setup_rocket(
         rocket
     };
 
-    // see if we should start up network monitor
-    let rocket = if config.get_network_monitor_enabled() {
-        rocket.attach(storage::ValidatorApiStorage::stage(storage.unwrap()))
+    // see if we should start up network monitor and if so, attach the node status api
+    if config.get_network_monitor_enabled() {
+        Ok(rocket
+            .attach(storage::ValidatorApiStorage::stage(storage.unwrap()))
+            .attach(node_status_api::stage_full())
+            .ignite()
+            .await?)
     } else {
-        rocket
-    };
-
-    Ok(rocket.ignite().await?)
-}
-
-fn custom_openapi_spec() -> OpenApi {
-    use rocket_okapi::okapi::openapi3::*;
-    OpenApi {
-        openapi: OpenApi::default_version(),
-        info: Info {
-            title: "Validator API".to_owned(),
-            description: None,
-            terms_of_service: None,
-            contact: None,
-            license: None,
-            version: env!("CARGO_PKG_VERSION").to_owned(),
-            ..Default::default()
-        },
-        servers: get_servers(),
-        ..Default::default()
+        Ok(rocket
+            .attach(node_status_api::stage_minimal())
+            .ignite()
+            .await?)
     }
 }
 
-fn get_servers() -> Vec<rocket_okapi::okapi::openapi3::Server> {
-    if std::env::var_os("CARGO").is_some() {
-        return vec![];
+#[allow(unused)]
+pub(crate) fn get_docs() -> SwaggerUIConfig {
+    SwaggerUIConfig {
+        urls: vec![
+            UrlObject::new("Contract cache", "../v1/openapi.json"),
+            UrlObject::new("Node status", "../v1/status/openapi.json"),
+        ],
+        ..SwaggerUIConfig::default()
     }
-    return vec![rocket_okapi::okapi::openapi3::Server {
-        url: std::env::var("OPEN_API_BASE").unwrap_or_else(|_| "/api/v1/".to_owned()),
-        description: Some("API".to_owned()),
-        ..Default::default()
-    }];
 }
 
 async fn run_validator_api(matches: ArgMatches<'static>) -> Result<()> {

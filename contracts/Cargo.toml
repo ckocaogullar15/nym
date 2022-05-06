@@ -1,6 +1,9 @@
 [workspace]
 members = ["bandwidth-claim", "coconut-bandwidth", "mixnet", "vesting", "multisig/cw3-flex-multisig", "multisig/cw4-group"]
 
+[patch."https://github.com/nymtech/sphinx"]
+sphinx = { git = 'https://github.com/ckocaogullar15/sphinx' }
+
 [profile.release]
 opt-level = 3
 debug = false

@@ -235,7 +235,8 @@ impl NymClient {
         gateway_client: GatewayClient,
     ) {
         info!("Starting mix traffic controller...");
-        MixTrafficController::new(mix_rx, gateway_client).start();
+        // CEREN: Trying to get the id in mis traffic controller
+        MixTrafficController::new(mix_rx, gateway_client, self.as_mix_recipient()).start();
     }
 
     fn start_socks5_listener(

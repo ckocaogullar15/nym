@@ -8,6 +8,7 @@ use crate::nymd::cosmwasm_client::types::{
 };
 use crate::nymd::error::NymdError;
 use crate::nymd::wallet::DirectSecp256k1HdWallet;
+use cosmrs::rpc::endpoint::broadcast;
 use cosmrs::rpc::Error as TendermintRpcError;
 use cosmrs::rpc::HttpClientUrl;
 use cosmwasm_std::{Coin, Uint128};
@@ -22,14 +23,12 @@ use mixnet_contract_common::{
     PagedRewardedSetResponse, QueryMsg, RewardedSetUpdateDetails,
 };
 use serde::Serialize;
-use std::collections::HashMap;
 use std::convert::TryInto;
 
 pub use crate::nymd::cosmwasm_client::client::CosmWasmClient;
 pub use crate::nymd::cosmwasm_client::signing_client::SigningCosmWasmClient;
 pub use crate::nymd::fee::Fee;
 use crate::nymd::fee::DEFAULT_SIMULATED_GAS_MULTIPLIER;
-pub use cosmrs::bank::MsgSend;
 pub use cosmrs::rpc::endpoint::tx::Response as TxResponse;
 pub use cosmrs::rpc::endpoint::validators::Response as ValidatorResponse;
 pub use cosmrs::rpc::HttpClient as QueryNymdClient;
@@ -44,6 +43,7 @@ pub use cosmrs::tx::{self, Gas};
 pub use cosmrs::Coin as CosmosCoin;
 pub use cosmrs::{AccountId, Decimal, Denom};
 pub use signing_client::Client as SigningNymdClient;
+use std::collections::HashMap;
 pub use traits::{VestingQueryClient, VestingSigningClient};
 
 pub mod cosmwasm_client;
@@ -640,7 +640,7 @@ impl<C> NymdClient<C> {
         recipient: &AccountId,
         amount: Vec<CosmosCoin>,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError>
+    ) -> Result<broadcast::tx_commit::Response, NymdError>
     where
         C: SigningCosmWasmClient + Sync,
     {
@@ -655,7 +655,7 @@ impl<C> NymdClient<C> {
         &self,
         msgs: Vec<(AccountId, Vec<CosmosCoin>)>,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError>
+    ) -> Result<broadcast::tx_commit::Response, NymdError>
     where
         C: SigningCosmWasmClient + Sync,
     {

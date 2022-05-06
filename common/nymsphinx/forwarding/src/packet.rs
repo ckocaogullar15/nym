@@ -42,6 +42,7 @@ impl From<NymNodeRoutingAddressError> for MixPacketFormattingError {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct MixPacket {
     next_hop: NymNodeRoutingAddress,
     sphinx_packet: SphinxPacket,

@@ -13,6 +13,9 @@ exclude = [
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[patch."https://github.com/nymtech/sphinx"]
+sphinx = { git = 'https://github.com/ckocaogullar15/sphinx' }
+
 [dependencies]
 mixnet-contract-common = { path = "../../common/cosmwasm-smart-contracts/mixnet-contract" }
 vesting-contract-common = { path = "../../common/cosmwasm-smart-contracts/vesting-contract" }

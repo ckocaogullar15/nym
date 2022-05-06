@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::convert::TryInto;
-use std::time::Duration;
 
 use async_trait::async_trait;
 use cosmrs::bank::MsgSend;
@@ -25,7 +24,7 @@ use crate::nymd::cosmwasm_client::types::*;
 use crate::nymd::error::NymdError;
 use crate::nymd::fee::{Fee, DEFAULT_SIMULATED_GAS_MULTIPLIER};
 use crate::nymd::wallet::DirectSecp256k1HdWallet;
-use crate::nymd::{CosmosCoin, GasPrice, TxResponse};
+use crate::nymd::{CosmosCoin, GasPrice};
 
 // we need to have **a** valid secp256k1 signature for simulation purposes.
 // it doesn't matter what it is as long as it parses correctly
@@ -35,9 +34,6 @@ const DUMMY_SECP256K1_SIGNATURE: &[u8] = &[
     32, 147, 101, 60, 64, 77, 44, 83, 221, 119, 170, 124, 109, 177, 73, 116, 46, 57, 102, 181, 98,
     91,
 ];
-
-const DEFAULT_BROADCAST_POLLING_RATE: Duration = Duration::from_secs(4);
-const DEFAULT_BROADCAST_TIMEOUT: Duration = Duration::from_secs(60);
 
 #[async_trait]
 pub trait SigningCosmWasmClient: CosmWasmClient {
@@ -115,12 +111,12 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .map_err(|_| NymdError::SerializationError("MsgStoreCode".to_owned()))?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, vec![upload_msg], fee, memo)
+            .sign_and_broadcast_commit(sender_address, vec![upload_msg], fee, memo)
             .await?
             .check_response()?;
 
-        let logs = parse_raw_logs(tx_res.tx_result.log)?;
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let logs = parse_raw_logs(tx_res.deliver_tx.log)?;
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         // TODO: should those strings be extracted into some constants?
         // the reason I think unwrap here is fine is that if the transaction succeeded and those
@@ -176,12 +172,12 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .map_err(|_| NymdError::SerializationError("MsgInstantiateContract".to_owned()))?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, vec![init_msg], fee, memo)
+            .sign_and_broadcast_commit(sender_address, vec![init_msg], fee, memo)
             .await?
             .check_response()?;
 
-        let logs = parse_raw_logs(tx_res.tx_result.log)?;
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let logs = parse_raw_logs(tx_res.deliver_tx.log)?;
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         // TODO: should those strings be extracted into some constants?
         // the reason I think unwrap here is fine is that if the transaction succeeded and those
@@ -218,14 +214,14 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .map_err(|_| NymdError::SerializationError("MsgUpdateAdmin".to_owned()))?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, vec![change_admin_msg], fee, memo)
+            .sign_and_broadcast_commit(sender_address, vec![change_admin_msg], fee, memo)
             .await?
             .check_response()?;
 
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         Ok(ChangeAdminResult {
-            logs: parse_raw_logs(tx_res.tx_result.log)?,
+            logs: parse_raw_logs(tx_res.deliver_tx.log)?,
             transaction_hash: tx_res.hash,
             gas_info,
         })
@@ -246,14 +242,14 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .map_err(|_| NymdError::SerializationError("MsgClearAdmin".to_owned()))?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, vec![change_admin_msg], fee, memo)
+            .sign_and_broadcast_commit(sender_address, vec![change_admin_msg], fee, memo)
             .await?
             .check_response()?;
 
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         Ok(ChangeAdminResult {
-            logs: parse_raw_logs(tx_res.tx_result.log)?,
+            logs: parse_raw_logs(tx_res.deliver_tx.log)?,
             transaction_hash: tx_res.hash,
             gas_info,
         })
@@ -281,14 +277,14 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .map_err(|_| NymdError::SerializationError("MsgMigrateContract".to_owned()))?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, vec![migrate_msg], fee, memo)
+            .sign_and_broadcast_commit(sender_address, vec![migrate_msg], fee, memo)
             .await?
             .check_response()?;
 
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         Ok(MigrateResult {
-            logs: parse_raw_logs(tx_res.tx_result.log)?,
+            logs: parse_raw_logs(tx_res.deliver_tx.log)?,
             transaction_hash: tx_res.hash,
             gas_info,
         })
@@ -316,14 +312,14 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .map_err(|_| NymdError::SerializationError("MsgExecuteContract".to_owned()))?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, vec![execute_msg], fee, memo)
+            .sign_and_broadcast_commit(sender_address, vec![execute_msg], fee, memo)
             .await?
             .check_response()?;
 
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         Ok(ExecuteResult {
-            logs: parse_raw_logs(tx_res.tx_result.log)?,
+            logs: parse_raw_logs(tx_res.deliver_tx.log)?,
             transaction_hash: tx_res.hash,
             gas_info,
         })
@@ -356,14 +352,14 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
             .collect::<Result<_, _>>()?;
 
         let tx_res = self
-            .sign_and_broadcast(sender_address, messages, fee, memo)
+            .sign_and_broadcast_commit(sender_address, messages, fee, memo)
             .await?
             .check_response()?;
 
-        let gas_info = GasInfo::new(tx_res.tx_result.gas_wanted, tx_res.tx_result.gas_used);
+        let gas_info = GasInfo::new(tx_res.deliver_tx.gas_wanted, tx_res.deliver_tx.gas_used);
 
         Ok(ExecuteResult {
-            logs: parse_raw_logs(tx_res.tx_result.log)?,
+            logs: parse_raw_logs(tx_res.deliver_tx.log)?,
             transaction_hash: tx_res.hash,
             gas_info,
         })
@@ -376,7 +372,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         amount: Vec<Coin>,
         fee: Fee,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError> {
+    ) -> Result<broadcast::tx_commit::Response, NymdError> {
         let send_msg = MsgSend {
             from_address: sender_address.clone(),
             to_address: recipient_address.clone(),
@@ -385,7 +381,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .to_any()
         .map_err(|_| NymdError::SerializationError("MsgSend".to_owned()))?;
 
-        self.sign_and_broadcast(sender_address, vec![send_msg], fee, memo)
+        self.sign_and_broadcast_commit(sender_address, vec![send_msg], fee, memo)
             .await?
             .check_response()
     }
@@ -396,7 +392,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         msgs: I,
         fee: Fee,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError>
+    ) -> Result<broadcast::tx_commit::Response, NymdError>
     where
         I: IntoIterator<Item = (AccountId, Vec<Coin>)> + Send,
     {
@@ -413,7 +409,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
             })
             .collect::<Result<_, _>>()?;
 
-        self.sign_and_broadcast(sender_address, messages, fee, memo)
+        self.sign_and_broadcast_commit(sender_address, messages, fee, memo)
             .await?
             .check_response()
     }
@@ -425,7 +421,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         amount: Coin,
         fee: Fee,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError> {
+    ) -> Result<broadcast::tx_commit::Response, NymdError> {
         let delegate_msg = MsgDelegate {
             delegator_address: delegator_address.to_owned(),
             validator_address: validator_address.to_owned(),
@@ -434,7 +430,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .to_any()
         .map_err(|_| NymdError::SerializationError("MsgDelegate".to_owned()))?;
 
-        self.sign_and_broadcast(delegator_address, vec![delegate_msg], fee, memo)
+        self.sign_and_broadcast_commit(delegator_address, vec![delegate_msg], fee, memo)
             .await?
             .check_response()
     }
@@ -446,7 +442,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         amount: Coin,
         fee: Fee,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError> {
+    ) -> Result<broadcast::tx_commit::Response, NymdError> {
         let undelegate_msg = MsgUndelegate {
             delegator_address: delegator_address.to_owned(),
             validator_address: validator_address.to_owned(),
@@ -455,7 +451,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .to_any()
         .map_err(|_| NymdError::SerializationError("MsgUndelegate".to_owned()))?;
 
-        self.sign_and_broadcast(delegator_address, vec![undelegate_msg], fee, memo)
+        self.sign_and_broadcast_commit(delegator_address, vec![undelegate_msg], fee, memo)
             .await?
             .check_response()
     }
@@ -466,7 +462,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         validator_address: &AccountId,
         fee: Fee,
         memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError> {
+    ) -> Result<broadcast::tx_commit::Response, NymdError> {
         let withdraw_msg = MsgWithdrawDelegatorReward {
             delegator_address: delegator_address.to_owned(),
             validator_address: validator_address.to_owned(),
@@ -474,7 +470,7 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         .to_any()
         .map_err(|_| NymdError::SerializationError("MsgWithdrawDelegatorReward".to_owned()))?;
 
-        self.sign_and_broadcast(delegator_address, vec![withdraw_msg], fee, memo)
+        self.sign_and_broadcast_commit(delegator_address, vec![withdraw_msg], fee, memo)
             .await?
             .check_response()
     }
@@ -577,27 +573,6 @@ pub trait SigningCosmWasmClient: CosmWasmClient {
         CosmWasmClient::broadcast_tx_commit(self, tx_bytes.into()).await
     }
 
-    /// Broadcast a transaction to the network and monitors its inclusion in a block.
-    async fn sign_and_broadcast(
-        &self,
-        signer_address: &AccountId,
-        messages: Vec<Any>,
-        fee: Fee,
-        memo: impl Into<String> + Send + 'static,
-    ) -> Result<TxResponse, NymdError> {
-        let memo = memo.into();
-        let fee = self
-            .determine_transaction_fee(signer_address, &messages, fee, &memo)
-            .await?;
-
-        let tx_raw = self.sign(signer_address, messages, fee, memo).await?;
-        let tx_bytes = tx_raw
-            .to_bytes()
-            .map_err(|_| NymdError::SerializationError("Tx".to_owned()))?;
-
-        self.broadcast_tx(tx_bytes.into()).await
-    }
-
     fn sign_direct(
         &self,
         signer_address: &AccountId,
@@ -663,9 +638,6 @@ pub struct Client {
     rpc_client: HttpClient,
     signer: DirectSecp256k1HdWallet,
     gas_price: GasPrice,
-
-    broadcast_polling_rate: Duration,
-    broadcast_timeout: Duration,
 }
 
 impl Client {
@@ -682,17 +654,7 @@ impl Client {
             rpc_client,
             signer,
             gas_price,
-            broadcast_polling_rate: DEFAULT_BROADCAST_POLLING_RATE,
-            broadcast_timeout: DEFAULT_BROADCAST_TIMEOUT,
         })
-    }
-
-    pub fn set_broadcast_polling_rate(&mut self, broadcast_polling_rate: Duration) {
-        self.broadcast_polling_rate = broadcast_polling_rate
-    }
-
-    pub fn set_broadcast_timeout(&mut self, broadcast_timeout: Duration) {
-        self.broadcast_timeout = broadcast_timeout
     }
 }
 
@@ -707,15 +669,7 @@ impl rpc::Client for Client {
 }
 
 #[async_trait]
-impl CosmWasmClient for Client {
-    fn broadcast_polling_rate(&self) -> Duration {
-        self.broadcast_polling_rate
-    }
-
-    fn broadcast_timeout(&self) -> Duration {
-        self.broadcast_timeout
-    }
-}
+impl CosmWasmClient for Client {}
 
 #[async_trait]
 impl SigningCosmWasmClient for Client {

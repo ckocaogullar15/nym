@@ -8,6 +8,12 @@ use log::*;
 use nymsphinx::forwarding::packet::MixPacket;
 use tokio::task::JoinHandle;
 
+use std::fs::File;
+use std::io::{Write, BufReader, BufRead, Error};
+
+// CEREN
+use nymsphinx::addressing::nodes::NodeIdentity;
+
 pub type BatchMixMessageSender = mpsc::UnboundedSender<Vec<MixPacket>>;
 pub type BatchMixMessageReceiver = mpsc::UnboundedReceiver<Vec<MixPacket>>;
 
@@ -22,16 +28,21 @@ pub struct MixTrafficController {
     // TODO: this is temporary work-around.
     // in long run `gateway_client` will be moved away from `MixTrafficController` anyway.
     consecutive_gateway_failure_count: usize,
+
+    // CEREN: Trying to get the node id in here
+    self_id: Option<NodeIdentity>
 }
 
 impl MixTrafficController {
     pub fn new(
         mix_rx: BatchMixMessageReceiver,
         gateway_client: GatewayClient,
+        self_id: Option<NodeIdentity>
     ) -> MixTrafficController {
         MixTrafficController {
             gateway_client,
             mix_rx,
+            self_id,
             consecutive_gateway_failure_count: 0,
         }
     }
@@ -60,6 +71,8 @@ impl MixTrafficController {
             }
             Ok(_) => {
                 trace!("We *might* have managed to forward sphinx packet(s) to the gateway!");
+                println!("{}", self.self_id);
+                println!("{}", mix_packet.sphinx_packet.payload.as_bytes());
                 self.consecutive_gateway_failure_count = 0;
             }
         }

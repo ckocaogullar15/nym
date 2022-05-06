@@ -5,9 +5,6 @@ use crate::{validator_api, ValidatorClientError};
 use coconut_interface::{BlindSignRequestBody, BlindedSignatureResponse, VerificationKeyResponse};
 use mixnet_contract_common::{GatewayBond, IdentityKeyRef, MixNodeBond};
 use url::Url;
-
-#[cfg(feature = "nymd-client")]
-use validator_api_requests::models::UptimeResponse;
 use validator_api_requests::models::{
     CoreNodeStatusResponse, MixnodeStatusResponse, RewardEstimationResponse,
     StakeSaturationResponse,
@@ -583,12 +580,6 @@ impl<C> Client<C> {
         }
 
         Ok(delegations)
-    }
-
-    pub async fn get_mixnode_avg_uptimes(
-        &self,
-    ) -> Result<Vec<UptimeResponse>, ValidatorClientError> {
-        Ok(self.validator_api.get_mixnode_avg_uptimes().await?)
     }
 
     pub async fn blind_sign(
