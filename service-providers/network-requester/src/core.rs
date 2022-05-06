@@ -251,7 +251,6 @@ impl ServiceProvider {
         loop {
             let received = match Self::read_websocket_message(&mut websocket_reader).await {
                 Some(msg) => {
-                    println!{"Received a message {:?}", msg};
                     msg}
                 None => {
                     error!("The websocket stream has finished!");

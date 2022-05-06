@@ -64,7 +64,10 @@ impl ReceivedMessagesBufferInner {
                 warn!("failed to recover fragment from raw data: {:?}. The whole underlying message might be corrupted and unrecoverable!", e);
                 return None;
             }
-            Ok(frag) => frag,
+            Ok(frag) => {
+                println!("Received message {:?}", frag);
+                frag
+                        }
         };
 
         if self.recently_reconstructed.contains(&fragment.id()) {

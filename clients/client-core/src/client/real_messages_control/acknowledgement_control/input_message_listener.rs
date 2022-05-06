@@ -130,12 +130,13 @@ where
             // we need to clone it because we need to keep it in memory in case we had to retransmit
             // it. And then we'd need to recreate entire ACK again.
             let chunk_clone = message_chunk.clone();
+            let chunk_clone2 = message_chunk.clone();
             let prepared_fragment = self
                 .message_preparer
                 .prepare_chunk_for_sending(chunk_clone, topology, &self.ack_key, &recipient)
                 .await
                 .unwrap();
-
+            println!("Original message {:?}, Sphinx payload {:?}", chunk_clone2, prepared_fragment.mix_packet.sphinx_packet().payload);
             real_messages.push(RealMessage::new(
                 prepared_fragment.mix_packet,
                 message_chunk.fragment_identifier(),
