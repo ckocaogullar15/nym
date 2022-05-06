@@ -11,7 +11,7 @@ use self::{
 use crate::client::real_messages_control::acknowledgement_control::AcknowledgementControllerConnectors;
 use crate::client::reply_key_storage::ReplyKeyStorage;
 use crate::client::{
-    inbound_messages::InputMessageReceiver, mix_traffic::BatchMixMessageSender,
+    inbound_messages::InputMessageReceiver, mix_traffic::BatchMixMessageSender, mix_traffic::BatchRealMessageSenderForNetwork,
     topology_control::TopologyAccessor,
 };
 use futures::channel::mpsc;
@@ -89,6 +89,7 @@ impl RealMessagesController<OsRng> {
         ack_receiver: AcknowledgementReceiver,
         input_receiver: InputMessageReceiver,
         mix_sender: BatchMixMessageSender,
+        real_mix_sender: BatchRealMessageSenderForNetwork,
         topology_access: TopologyAccessor,
         reply_key_storage: ReplyKeyStorage,
     ) -> Self {
@@ -132,6 +133,7 @@ impl RealMessagesController<OsRng> {
             Arc::clone(&config.ack_key),
             sent_notifier_tx,
             mix_sender,
+            real_mix_sender,
             real_message_receiver,
             rng,
             config.self_recipient,

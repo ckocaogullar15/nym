@@ -7,7 +7,7 @@ use client_core::client::inbound_messages::{
 };
 use client_core::client::key_manager::KeyManager;
 use client_core::client::mix_traffic::{
-    BatchMixMessageReceiver, BatchMixMessageSender, MixTrafficController,
+    BatchMixMessageReceiver, BatchMixMessageSender, MixTrafficController, BatchRealMessageReceiverForNetwork, BatchRealMessageSenderForNetwork,
 };
 use client_core::client::real_messages_control::RealMessagesController;
 use client_core::client::received_buffer::{
@@ -97,6 +97,7 @@ impl NymClient {
         ack_receiver: AcknowledgementReceiver,
         input_receiver: InputMessageReceiver,
         mix_sender: BatchMixMessageSender,
+        real_mix_sender: BatchRealMessageSenderForNetwork,
     ) {
         let controller_config = client_core::client::real_messages_control::Config::new(
             self.key_manager.ack_key(),
@@ -115,6 +116,7 @@ impl NymClient {
             ack_receiver,
             input_receiver,
             mix_sender,
+            real_mix_sender,
             topology_accessor,
             reply_key_storage,
         )
@@ -232,11 +234,11 @@ impl NymClient {
     fn start_mix_traffic_controller(
         &mut self,
         mix_rx: BatchMixMessageReceiver,
+        mix_rx_real: BatchRealMessageReceiverForNetwork,
         gateway_client: GatewayClient,
     ) {
         info!("Starting mix traffic controller...");
-        // CEREN: Trying to get the id in mis traffic controller
-        MixTrafficController::new(mix_rx, gateway_client, self.as_mix_recipient()).start();
+        MixTrafficController::new(mix_rx, mix_rx_real, gateway_client).start();
     }
 
     fn start_socks5_listener(
@@ -284,6 +286,7 @@ impl NymClient {
         // they are used by cover traffic stream and real traffic stream
         // sphinx_message_receiver is the receiver used by MixTrafficController that sends the actual traffic
         let (sphinx_message_sender, sphinx_message_receiver) = mpsc::unbounded();
+        let (real_sphinx_message_sender, real_sphinx_message_receiver) = mpsc::unbounded();
 
         // unwrapped_sphinx_sender is the transmitter of mixnet messages received from the gateway
         // unwrapped_sphinx_receiver is the receiver for said messages - used by ReceivedMessagesBuffer
@@ -317,13 +320,14 @@ impl NymClient {
             .start_gateway_client(mixnet_messages_sender, ack_sender)
             .await;
 
-        self.start_mix_traffic_controller(sphinx_message_receiver, gateway_client);
+        self.start_mix_traffic_controller(sphinx_message_receiver, real_sphinx_message_receiver, gateway_client);
         self.start_real_traffic_controller(
             shared_topology_accessor.clone(),
             reply_key_storage,
             ack_receiver,
             input_receiver,
             sphinx_message_sender.clone(),
+            real_sphinx_message_sender.clone(),
         );
 
         self.start_cover_traffic_stream(shared_topology_accessor, sphinx_message_sender);

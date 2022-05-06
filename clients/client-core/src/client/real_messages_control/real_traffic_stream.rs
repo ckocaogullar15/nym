@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::client::mix_traffic::BatchMixMessageSender;
+use crate::client::mix_traffic::BatchRealMessageSenderForNetwork;
 use crate::client::real_messages_control::acknowledgement_control::SentPacketNotificationSender;
 use crate::client::topology_control::TopologyAccessor;
 use futures::channel::mpsc;
@@ -67,6 +68,7 @@ where
     /// Channel used for sending prepared sphinx packets to `MixTrafficController` that sends them
     /// out to the network without any further delays.
     mix_tx: BatchMixMessageSender,
+    real_mix_tx: BatchRealMessageSenderForNetwork,
 
     /// Channel used for receiving real, prepared, messages that must be first sufficiently delayed
     /// before being sent out into the network.
@@ -170,6 +172,7 @@ where
         ack_key: Arc<AckKey>,
         sent_notifier: SentPacketNotificationSender,
         mix_tx: BatchMixMessageSender,
+        real_mix_tx: BatchRealMessageSenderForNetwork,
         real_receiver: BatchRealMessageReceiver,
         rng: R,
         our_full_destination: Recipient,
@@ -181,6 +184,7 @@ where
             sent_notifier,
             next_delay: Box::pin(time::sleep(Default::default())),
             mix_tx,
+            real_mix_tx,
             real_receiver,
             our_full_destination,
             rng,
@@ -219,7 +223,7 @@ where
                 }
                 let topology_ref = topology_ref_option.unwrap();
 
-                generate_loop_cover_packet(
+                let cover_msg = generate_loop_cover_packet(
                     &mut self.rng,
                     topology_ref,
                     &*self.ack_key,
@@ -227,11 +231,15 @@ where
                     self.config.average_ack_delay,
                     self.config.average_packet_delay,
                 )
-                .expect("Somehow failed to generate a loop cover message with a valid topology")
+                .expect("Somehow failed to generate a loop cover message with a valid topology");
+                self.mix_tx.unbounded_send(vec![cover_msg]).unwrap();
             }
+            
             StreamMessage::Real(real_message) => {
+                println!("Got real message!");
                 self.sent_notify(real_message.fragment_id);
-                real_message.mix_packet
+                self.real_mix_tx.unbounded_send(vec![real_message.mix_packet]).unwrap();
+                // real_message.mix_packet;
             }
         };
 
@@ -239,7 +247,8 @@ where
         // - we run out of memory
         // - the receiver channel is closed
         // in either case there's no recovery and we can only panic
-        self.mix_tx.unbounded_send(vec![next_message]).unwrap();
+        
+        // self.mix_tx.unbounded_send(vec![next_message]).unwrap();
 
         // JS: Not entirely sure why or how it fixes stuff, but without the yield call,
         // the UnboundedReceiver [of mix_rx] will not get a chance to read anything

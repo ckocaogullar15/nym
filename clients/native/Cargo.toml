@@ -11,9 +11,6 @@ rust-version = "1.56"
 name = "nym_client"
 path = "src/lib.rs"
 
-[patch."https://github.com/nymtech/sphinx"]
-sphinx = { git = 'https://github.com/ckocaogullar15/sphinx' }
-
 [dependencies]
 # dependencies to review:
 futures = "0.3" # bunch of futures stuff, however, now that I think about it, it could perhaps be completely removed

@@ -5,14 +5,9 @@
 panic = "abort"
 opt-level = "s"
 overflow-checks = true
-debug = true
-debug-assertions = true
 
 [profile.dev]
 panic = "abort"
-
-[patch."https://github.com/nymtech/sphinx"]
-sphinx = { git = 'https://github.com/ckocaogullar15/sphinx' }
 
 [workspace]
 

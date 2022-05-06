@@ -17,9 +17,6 @@ default = ["console_error_panic_hook"]
 offline-test = []
 coconut = ["coconut-interface", "credentials", "gateway-client/coconut"]
 
-[patch."https://github.com/nymtech/sphinx"]
-sphinx = { git = 'https://github.com/ckocaogullar15/sphinx' }
-
 [dependencies]
 futures = "0.3"
 serde = { version = "1.0", features = ["derive"] }

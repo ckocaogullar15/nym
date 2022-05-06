@@ -1,6 +1,8 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
 
+use rand::Rng;
+
 use crate::bandwidth::BandwidthController;
 use crate::cleanup_socket_message;
 use crate::error::GatewayClientError;
@@ -217,16 +219,15 @@ impl GatewayClient {
     // ignore the current socket state (with which we can't do much anyway)
     // note: the caller MUST ensure that if the stream was delegated, the spawned
     // future is finished.
-    async fn attempt_reconnection(&mut self) -> Result<&[u8], GatewayClientError> {
+    async fn attempt_reconnection(&mut self) -> Result<(), GatewayClientError> {
         info!("Attempting gateway reconnection...");
         self.authenticated = false;
-        let ok = "1";
 
         for i in 1..self.reconnection_attempts {
             info!("attempt {}...", i);
             if self.authenticate_and_start().await.is_ok() {
                 info!("managed to reconnect!");
-                return Ok(ok.as_bytes());
+                return Ok(());
             }
 
             #[cfg(not(target_arch = "wasm32"))]
@@ -246,7 +247,7 @@ impl GatewayClient {
         match self.authenticate_and_start().await {
             Ok(_) => {
                 info!("managed to reconnect!");
-                return Ok(ok.as_bytes());
+                Ok(())
             }
             Err(err) => {
                 error!(
@@ -592,7 +593,7 @@ impl GatewayClient {
     pub async fn batch_send_mix_packets(
         &mut self,
         packets: Vec<MixPacket>,
-    ) -> Result<&[u8], GatewayClientError> {
+    ) -> Result<(), GatewayClientError> {
         if !self.authenticated {
             return Err(GatewayClientError::NotAuthenticated);
         }
@@ -627,17 +628,65 @@ impl GatewayClient {
                 Err(err)
             }
         } else {
-            let ok = "1";
-            Ok(ok.as_bytes())
+            Ok(())
         }
     }
 
-    // CEREN: added mix_packet
-    async fn send_with_reconnection_on_failure<'a>(
-        &'a mut self,
+    pub async fn batch_send_real_mix_packets(
+        &mut self,
+        packets: Vec<MixPacket>,
+    ) -> Result<(), GatewayClientError> {
+        if !self.authenticated {
+            return Err(GatewayClientError::NotAuthenticated);
+        }
+        if self.estimate_required_bandwidth(&packets) > self.bandwidth_remaining {
+            return Err(GatewayClientError::NotEnoughBandwidth(
+                self.estimate_required_bandwidth(&packets),
+                self.bandwidth_remaining,
+            ));
+        }
+        if !self.connection.is_established() {
+            return Err(GatewayClientError::ConnectionNotEstablished);
+        }
+
+        let mut packet_tags = Vec::new();
+        let mut rng = OsRng;
+
+        let messages: Vec<_> = packets
+            .into_iter()
+            .map(|mix_packet| {
+                let tag: u8 = rng.gen();
+                packet_tags.push(tag);
+                println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
+                BinaryRequest::new_forward_request(mix_packet).into_ws_message(
+                    self.shared_key
+                        .as_ref()
+                        .expect("no shared key present even though we're authenticated!"),
+                )
+            })
+            .collect();
+
+        if let Err(err) = self
+            .batch_send_websocket_messages_without_response(messages)
+            .await
+        {
+            if err.is_closed_connection() && self.should_reconnect_on_failure {
+                self.attempt_reconnection().await
+            } else {
+                Err(err)
+            }
+        } else {
+            for tag in packet_tags{
+                println!("{} was sent", tag);
+            };
+            Ok(())
+        }
+    }
+
+    async fn send_with_reconnection_on_failure(
+        &mut self,
         msg: Message,
-        mix_packet_bytes: &'a [u8],
-    ) -> Result<&'a [u8], GatewayClientError> {
+    ) -> Result<(), GatewayClientError> {
         if let Err(err) = self.send_websocket_message_without_response(msg).await {
             if err.is_closed_connection() && self.should_reconnect_on_failure {
                 info!("Going to attempt a reconnection");
@@ -646,11 +695,29 @@ impl GatewayClient {
                 Err(err)
             }
         } else {
-            Ok(mix_packet_bytes)
+            Ok(())
         }
     }
 
-    pub async fn send_ping_message(&mut self) -> Result<&[u8], GatewayClientError> {
+    async fn send_real_with_reconnection_on_failure(
+        &mut self,
+        msg: Message,
+        tag: u8
+    ) -> Result<(), GatewayClientError> {
+        if let Err(err) = self.send_websocket_message_without_response(msg).await {
+            if err.is_closed_connection() && self.should_reconnect_on_failure {
+                info!("Going to attempt a reconnection");
+                self.attempt_reconnection().await
+            } else {
+                Err(err)
+            }
+        } else {
+            println!{"{} was sent", tag}
+            Ok(())
+        }
+    }
+
+    pub async fn send_ping_message(&mut self) -> Result<(), GatewayClientError> {
         if !self.connection.is_established() {
             return Err(GatewayClientError::ConnectionNotEstablished);
         }
@@ -658,22 +725,14 @@ impl GatewayClient {
         // as per RFC6455 section 5.5.2, `Ping frame MAY include "Application data".`
         // so we don't need to include any here.
         let msg = Message::Ping(Vec::new());
-        let ok = "1";
-        self.send_with_reconnection_on_failure(msg, ok.as_bytes()).await
+        self.send_with_reconnection_on_failure(msg).await
     }
-
-    // CEREN
-    // fn packet_to_bytes<'a>(m: &'a MixPacket) -> &'a [u8] {
-    //     let sphinx_packet = m.sphinx_packet();
-    //     let bytes = sphinx_packet.payload.as_bytes();
-    //     return bytes
-    // }
 
     // TODO: possibly make responses optional
     pub async fn send_mix_packet(
         &mut self,
         mix_packet: MixPacket,
-    ) -> Result<&[u8], GatewayClientError> {
+    ) -> Result<(), GatewayClientError> {
         if !self.authenticated {
             return Err(GatewayClientError::NotAuthenticated);
         }
@@ -689,17 +748,71 @@ impl GatewayClient {
         // note: into_ws_message encrypts the requests and adds a MAC on it. Perhaps it should
         // be more explicit in the naming?
         
-        // let sphinx_packet = mix_packet.sphinx_packet();
-        // let bytes = sphinx_packet.payload.as_bytes();
-        let mix_copy = mix_packet.clone()
-        
-        let msg = {BinaryRequest::new_forward_request(mix_packet).into_ws_message(
+        let msg = BinaryRequest::new_forward_request(mix_packet).into_ws_message(
             self.shared_key
                 .as_ref()
                 .expect("no shared key present even though we're authenticated!"),
-        )};
-        // CEREN: added mix_packet
-        self.send_with_reconnection_on_failure(msg, bytemix_copy.sphinx_packet().payload.as_bytes()).await
+        );
+        self.send_with_reconnection_on_failure(msg).await
+    }
+
+    pub async fn send_mix_packet_test(
+        &mut self,
+        mix_packet: MixPacket,
+    ) -> Result<(), GatewayClientError> {
+        if !self.authenticated {
+            return Err(GatewayClientError::NotAuthenticated);
+        }
+        if (mix_packet.sphinx_packet().len() as i64) > self.bandwidth_remaining {
+            return Err(GatewayClientError::NotEnoughBandwidth(
+                mix_packet.sphinx_packet().len() as i64,
+                self.bandwidth_remaining,
+            ));
+        }
+        if !self.connection.is_established() {
+            return Err(GatewayClientError::ConnectionNotEstablished);
+        }
+        // note: into_ws_message encrypts the requests and adds a MAC on it. Perhaps it should
+        // be more explicit in the naming?
+        
+        let msg = BinaryRequest::new_forward_request(mix_packet).into_ws_message(
+            self.shared_key
+                .as_ref()
+                .expect("no shared key present even though we're authenticated!"),
+        );
+        self.send_with_reconnection_on_failure(msg).await
+    }
+
+    // TODO: possibly make responses optional
+    pub async fn send_real_mix_packet(
+        &mut self,
+        mix_packet: MixPacket,
+    ) -> Result<(), GatewayClientError> {
+        if !self.authenticated {
+            return Err(GatewayClientError::NotAuthenticated);
+        }
+        if (mix_packet.sphinx_packet().len() as i64) > self.bandwidth_remaining {
+            return Err(GatewayClientError::NotEnoughBandwidth(
+                mix_packet.sphinx_packet().len() as i64,
+                self.bandwidth_remaining,
+            ));
+        }
+        if !self.connection.is_established() {
+            return Err(GatewayClientError::ConnectionNotEstablished);
+        }
+        // note: into_ws_message encrypts the requests and adds a MAC on it. Perhaps it should
+        // be more explicit in the naming?
+        let mut rng = OsRng;
+        let tag: u8 = rng.gen();
+
+        println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
+
+        let msg = BinaryRequest::new_forward_request(mix_packet).into_ws_message(
+            self.shared_key
+                .as_ref()
+                .expect("no shared key present even though we're authenticated!"),
+        );
+        self.send_real_with_reconnection_on_failure(msg, tag).await
     }
 
     async fn recover_socket_connection(&mut self) -> Result<(), GatewayClientError> {

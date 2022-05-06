@@ -6,9 +6,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[patch."https://github.com/nymtech/sphinx"]
-sphinx = { git = 'https://github.com/ckocaogullar15/sphinx' }
-
 [dependencies]
 dirs = "3.0"
 futures = "0.3"
