@@ -1,5 +1,8 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
+use rand::Rng;
+use std::fs::OpenOptions;
+use std::io::{Write, BufReader, BufRead, Error};
 
 use client_core::client::cover_traffic_stream::LoopCoverTrafficStream;
 use client_core::client::inbound_messages::{
@@ -122,6 +125,11 @@ impl NymClient {
         );
 
         info!("Starting real traffic stream...");
+        let filename = format!("{}.txt", self.as_mix_recipient().identity());
+        println!("Creating file with name {}", filename);
+        
+        let mut file = OpenOptions::new().create_new(true).append(true).open(&filename).expect(
+            "cannot open file");
 
         RealMessagesController::new(
             controller_config,
@@ -131,6 +139,7 @@ impl NymClient {
             real_mix_sender,
             topology_accessor,
             reply_key_storage,
+            filename,
         )
         .start();
     }
@@ -189,6 +198,8 @@ impl NymClient {
         )
         .expect("Could not create bandwidth controller");
 
+        let filename = format!("{}.txt", self.as_mix_recipient().identity());
+
         let mut gateway_client = GatewayClient::new(
             gateway_address,
             self.key_manager.identity_keypair(),
@@ -199,6 +210,7 @@ impl NymClient {
             ack_sender,
             self.config.get_base().get_gateway_response_timeout(),
             Some(bandwidth_controller),
+            Some(filename),
         );
 
         if self.config.get_base().get_disabled_credentials_mode() {

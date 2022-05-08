@@ -1,5 +1,8 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
+use rand::Rng;
+use std::fs::File;
+use std::io::{Write, BufReader, BufRead, Error};
 
 use client_core::client::cover_traffic_stream::LoopCoverTrafficStream;
 use client_core::client::inbound_messages::{
@@ -119,6 +122,7 @@ impl NymClient {
             real_mix_sender,
             topology_accessor,
             reply_key_storage,
+            ' '.to_string(),
         )
         .start();
     }
@@ -187,6 +191,7 @@ impl NymClient {
             ack_sender,
             self.config.get_base().get_gateway_response_timeout(),
             Some(bandwidth_controller),
+            None
         );
 
         if self.config.get_base().get_disabled_credentials_mode() {
@@ -276,6 +281,7 @@ impl NymClient {
     }
 
     pub async fn start(&mut self) {
+        let mut rng = rand::thread_rng();
         info!("Starting nym client");
         // channels for inter-component communication
         // TODO: make the channels be internally created by the relevant components
@@ -335,5 +341,6 @@ impl NymClient {
 
         info!("Client startup finished!");
         info!("The address of this client is: {}", self.as_mix_recipient());
+        
     }
 }

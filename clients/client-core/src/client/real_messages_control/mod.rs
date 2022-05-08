@@ -4,6 +4,8 @@
 // INPUT: InputMessage from user
 // INPUT2: Acks from mix
 // OUTPUT: MixMessage to mix traffic
+use std::fs::OpenOptions;
+use std::io::{Write, BufReader, BufRead, Error};
 
 use self::{
     acknowledgement_control::AcknowledgementController, real_traffic_stream::OutQueueControl,
@@ -79,6 +81,7 @@ where
 {
     out_queue_control: Option<OutQueueControl<R>>,
     ack_control: Option<AcknowledgementController<R>>,
+    filename: Option<String>,
 }
 
 // obviously when we finally make shared rng that is on 'higher' level, this should become
@@ -92,6 +95,8 @@ impl RealMessagesController<OsRng> {
         real_mix_sender: BatchRealMessageSenderForNetwork,
         topology_access: TopologyAccessor,
         reply_key_storage: ReplyKeyStorage,
+        filename: String,
+        
     ) -> Self {
         let rng = OsRng;
 
@@ -120,6 +125,7 @@ impl RealMessagesController<OsRng> {
             config.self_recipient,
             reply_key_storage,
             ack_controller_connectors,
+            filename.clone(),
         );
 
         let out_queue_config = real_traffic_stream::Config::new(
@@ -143,6 +149,7 @@ impl RealMessagesController<OsRng> {
         RealMessagesController {
             out_queue_control: Some(out_queue_control),
             ack_control: Some(ack_control),
+            filename: Some(filename.clone())
         }
     }
 

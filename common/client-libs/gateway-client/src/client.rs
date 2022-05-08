@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use rand::Rng;
+use std::fs::OpenOptions;
+use std::fs::File;
+use std::io::prelude::*;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::bandwidth::BandwidthController;
 use crate::cleanup_socket_message;
@@ -58,6 +62,7 @@ pub struct GatewayClient {
     packet_router: PacketRouter,
     response_timeout_duration: Duration,
     bandwidth_controller: Option<BandwidthController<PersistentStorage>>,
+    filename: Option<String>,
 
     // reconnection related variables
     /// Specifies whether client should try to reconnect to gateway on connection failure.
@@ -82,6 +87,7 @@ impl GatewayClient {
         ack_sender: AcknowledgementSender,
         response_timeout_duration: Duration,
         bandwidth_controller: Option<BandwidthController<PersistentStorage>>,
+        filename: Option<String>,
     ) -> Self {
         GatewayClient {
             authenticated: false,
@@ -99,6 +105,7 @@ impl GatewayClient {
             should_reconnect_on_failure: true,
             reconnection_attempts: DEFAULT_RECONNECTION_ATTEMPTS,
             reconnection_backoff: DEFAULT_RECONNECTION_BACKOFF,
+            filename,
         }
     }
 
@@ -125,6 +132,7 @@ impl GatewayClient {
         gateway_owner: String,
         local_identity: Arc<identity::KeyPair>,
         response_timeout_duration: Duration,
+        filename: Option<String>,
     ) -> Self {
         use futures::channel::mpsc;
 
@@ -150,6 +158,7 @@ impl GatewayClient {
             should_reconnect_on_failure: false,
             reconnection_attempts: DEFAULT_RECONNECTION_ATTEMPTS,
             reconnection_backoff: DEFAULT_RECONNECTION_BACKOFF,
+            filename,
         }
     }
 
@@ -651,6 +660,13 @@ impl GatewayClient {
 
         let mut packet_tags = Vec::new();
         let mut rng = OsRng;
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+
+        let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
+            "cannot open file");
 
         let messages: Vec<_> = packets
             .into_iter()
@@ -658,6 +674,8 @@ impl GatewayClient {
                 let tag: u8 = rng.gen();
                 packet_tags.push(tag);
                 println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
+                file.write_all(format!("tag_payload;tag:{};payload:{:?}\n", tag, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
+                println!("file append success");
                 BinaryRequest::new_forward_request(mix_packet).into_ws_message(
                     self.shared_key
                         .as_ref()
@@ -677,7 +695,15 @@ impl GatewayClient {
             }
         } else {
             for tag in packet_tags{
+                let start = SystemTime::now();
+                let since_the_epoch = start
+                    .duration_since(UNIX_EPOCH)
+                    .expect("Time went backwards");
+                println!("{:?}", since_the_epoch);
+                let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
                 println!("{} was sent", tag);
+                file.write_all(format!("tag_time;tag:{};time:{}\n", tag, in_ms).as_bytes()).expect("write failed");
+                println!("file append success");
             };
             Ok(())
         }
@@ -704,6 +730,15 @@ impl GatewayClient {
         msg: Message,
         tag: u8
     ) -> Result<(), GatewayClientError> {
+        let fin = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+        // let fin = self.filename.unwrap().clone();
+
+        let mut file = OpenOptions::new().append(true).open(&fin).expect(
+            "cannot open file");
+            
         if let Err(err) = self.send_websocket_message_without_response(msg).await {
             if err.is_closed_connection() && self.should_reconnect_on_failure {
                 info!("Going to attempt a reconnection");
@@ -712,7 +747,15 @@ impl GatewayClient {
                 Err(err)
             }
         } else {
-            println!{"{} was sent", tag}
+            let start = SystemTime::now();
+            let since_the_epoch = start
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards");
+            println!("{:?}", since_the_epoch);
+            let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
+            println!("{} was sent", tag);
+            file.write_all(format!("tag_time;tag:{};time:{}\n", tag, in_ms).as_bytes()).expect("write failed");
+            println!("file append success");
             Ok(())
         }
     }
@@ -805,7 +848,18 @@ impl GatewayClient {
         let mut rng = OsRng;
         let tag: u8 = rng.gen();
 
-        println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
+        let fin = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+        // let fin = self.filename.unwrap().clone();
+
+        let mut file = OpenOptions::new().append(true).open(&fin).expect(
+            "cannot open file");
+         file.write_all(format!("tag_payload;tag:{};payload:{:?}\n", tag, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
+         println!("file append success");
+
+        println!("CEREN {} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
 
         let msg = BinaryRequest::new_forward_request(mix_packet).into_ws_message(
             self.shared_key

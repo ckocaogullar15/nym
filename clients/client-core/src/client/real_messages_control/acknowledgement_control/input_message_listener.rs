@@ -1,6 +1,10 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fs::OpenOptions;
+use std::io::{Write, BufReader, BufRead, Error};
+
+
 use super::action_controller::{Action, ActionSender};
 use super::PendingAcknowledgement;
 use crate::client::reply_key_storage::ReplyKeyStorage;
@@ -32,6 +36,7 @@ where
     real_message_sender: BatchRealMessageSender,
     topology_access: TopologyAccessor,
     reply_key_storage: ReplyKeyStorage,
+    filename: Option<String>,
 }
 
 impl<R> InputMessageListener<R>
@@ -50,6 +55,7 @@ where
         real_message_sender: BatchRealMessageSender,
         topology_access: TopologyAccessor,
         reply_key_storage: ReplyKeyStorage,
+        filename: Option<String>,
     ) -> Self {
         InputMessageListener {
             ack_key,
@@ -60,6 +66,7 @@ where
             real_message_sender,
             topology_access,
             reply_key_storage,
+            filename
         }
     }
 
@@ -126,6 +133,14 @@ where
         // encrypt chunks, put them inside sphinx packets and generate acks
         let mut pending_acks = Vec::with_capacity(split_message.len());
         let mut real_messages = Vec::with_capacity(split_message.len());
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+
+        let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
+            "cannot open file");
+
         for message_chunk in split_message {
             // we need to clone it because we need to keep it in memory in case we had to retransmit
             // it. And then we'd need to recreate entire ACK again.
@@ -137,6 +152,9 @@ where
                 .await
                 .unwrap();
             println!("Original message {:?}, Sphinx payload {:?}", chunk_clone2, prepared_fragment.mix_packet.sphinx_packet().payload);
+            file.write_all(format!("original_payload;original:{:?};payload:{:?}\n", chunk_clone2, prepared_fragment.mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
+            println!("file append success");
+
             real_messages.push(RealMessage::new(
                 prepared_fragment.mix_packet,
                 message_chunk.fragment_identifier(),

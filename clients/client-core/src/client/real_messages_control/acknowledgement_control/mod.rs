@@ -1,5 +1,7 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
+use std::fs::OpenOptions;
+use std::io::{Write, BufReader, BufRead, Error};
 
 use self::{
     acknowledgement_listener::AcknowledgementListener, action_controller::ActionController,
@@ -146,6 +148,7 @@ where
     retransmission_request_listener: Option<RetransmissionRequestListener<R>>,
     sent_notification_listener: Option<SentNotificationListener>,
     action_controller: Option<ActionController>,
+    filename: Option<String>,
 }
 
 impl<R> AcknowledgementController<R>
@@ -160,6 +163,7 @@ where
         ack_recipient: Recipient,
         reply_key_storage: ReplyKeyStorage,
         connectors: AcknowledgementControllerConnectors,
+        filename: String,
     ) -> Self {
         let (retransmission_tx, retransmission_rx) = mpsc::unbounded();
 
@@ -192,6 +196,7 @@ where
             connectors.real_message_sender.clone(),
             topology_access.clone(),
             reply_key_storage,
+            Some(filename.clone()),
         );
 
         // will listen for any ack timeouts and trigger retransmission
@@ -216,6 +221,7 @@ where
             retransmission_request_listener: Some(retransmission_request_listener),
             sent_notification_listener: Some(sent_notification_listener),
             action_controller: Some(action_controller),
+            filename: Some(filename.clone()),
         }
     }
 

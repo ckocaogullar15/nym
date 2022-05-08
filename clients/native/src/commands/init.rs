@@ -99,6 +99,7 @@ async fn register_with_gateway(
         gateway.owner.clone(),
         our_identity.clone(),
         timeout,
+        None
     );
     gateway_client
         .establish_connection()

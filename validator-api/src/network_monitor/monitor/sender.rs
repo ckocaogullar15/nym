@@ -214,6 +214,7 @@ impl PacketSender {
             ack_sender,
             fresh_gateway_client_data.gateway_response_timeout,
             Some(fresh_gateway_client_data.bandwidth_controller.clone()),
+            None
         );
 
         if fresh_gateway_client_data.disabled_credentials_mode {
