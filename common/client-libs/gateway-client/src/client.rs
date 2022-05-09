@@ -664,14 +664,14 @@ impl GatewayClient {
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
-
+        println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
-
+        
         let messages: Vec<_> = packets
             .into_iter()
             .map(|mix_packet| {
-                let tag: u8 = rng.gen();
+                let tag: u32 = rng.gen();
                 packet_tags.push(tag);
                 println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
                 file.write_all(format!("tag_payload;tag:{};payload:{:?}\n", tag, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
@@ -728,15 +728,15 @@ impl GatewayClient {
     async fn send_real_with_reconnection_on_failure(
         &mut self,
         msg: Message,
-        tag: u8
+        tag: u32
     ) -> Result<(), GatewayClientError> {
-        let fin = match &self.filename {
+        let filename_unwrapped = match &self.filename {
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
         // let fin = self.filename.unwrap().clone();
-
-        let mut file = OpenOptions::new().append(true).open(&fin).expect(
+        println!("filename unwrapped {}", filename_unwrapped);
+        let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
             
         if let Err(err) = self.send_websocket_message_without_response(msg).await {
@@ -846,15 +846,15 @@ impl GatewayClient {
         // note: into_ws_message encrypts the requests and adds a MAC on it. Perhaps it should
         // be more explicit in the naming?
         let mut rng = OsRng;
-        let tag: u8 = rng.gen();
+        let tag: u32 = rng.gen();
 
-        let fin = match &self.filename {
+        let filename_unwrapped = match &self.filename {
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
         // let fin = self.filename.unwrap().clone();
-
-        let mut file = OpenOptions::new().append(true).open(&fin).expect(
+        println!("filename unwrapped {}", filename_unwrapped);
+        let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
          file.write_all(format!("tag_payload;tag:{};payload:{:?}\n", tag, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
          println!("file append success");

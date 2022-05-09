@@ -3,6 +3,8 @@
 use rand::Rng;
 use std::fs::OpenOptions;
 use std::io::{Write, BufReader, BufRead, Error};
+use std::time::{SystemTime, UNIX_EPOCH};
+use rand::rngs::OsRng;
 
 use client_core::client::cover_traffic_stream::LoopCoverTrafficStream;
 use client_core::client::inbound_messages::{
@@ -57,6 +59,8 @@ pub struct NymClient {
     /// Channel used for obtaining reconstructed messages received from the mix network.
     /// It is only available if the client started with the websocket listener disabled.
     receive_tx: Option<ReconstructedMessagesReceiver>,
+
+    filename: Option<String>,
 }
 
 impl NymClient {
@@ -69,6 +73,7 @@ impl NymClient {
             key_manager,
             input_tx: None,
             receive_tx: None,
+            filename: None
         }
     }
 
@@ -125,10 +130,15 @@ impl NymClient {
         );
 
         info!("Starting real traffic stream...");
-        let filename = format!("{}.txt", self.as_mix_recipient().identity());
-        println!("Creating file with name {}", filename);
+
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+       
+        println!("Creating file with name {}", filename_unwrapped);
         
-        let mut file = OpenOptions::new().create_new(true).append(true).open(&filename).expect(
+        let mut file = OpenOptions::new().create_new(true).append(true).open(filename_unwrapped.clone()).expect(
             "cannot open file");
 
         RealMessagesController::new(
@@ -139,7 +149,7 @@ impl NymClient {
             real_mix_sender,
             topology_accessor,
             reply_key_storage,
-            filename,
+            filename_unwrapped,
         )
         .start();
     }
@@ -153,11 +163,18 @@ impl NymClient {
         reply_key_storage: ReplyKeyStorage,
     ) {
         info!("Starting received messages buffer controller...");
+
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+
         ReceivedMessagesBufferController::new(
             self.key_manager.encryption_keypair(),
             query_receiver,
             mixnet_receiver,
             reply_key_storage,
+            Some(filename_unwrapped),
         )
         .start()
     }
@@ -198,7 +215,10 @@ impl NymClient {
         )
         .expect("Could not create bandwidth controller");
 
-        let filename = format!("{}.txt", self.as_mix_recipient().identity());
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
 
         let mut gateway_client = GatewayClient::new(
             gateway_address,
@@ -210,7 +230,7 @@ impl NymClient {
             ack_sender,
             self.config.get_base().get_gateway_response_timeout(),
             Some(bandwidth_controller),
-            Some(filename),
+            Some(filename_unwrapped),
         );
 
         if self.config.get_base().get_disabled_credentials_mode() {
@@ -338,6 +358,10 @@ impl NymClient {
 
     pub async fn start(&mut self) {
         info!("Starting nym client");
+        let mut rng = OsRng;
+        let random_tag: u16 = rng.gen();
+        let filename = format!("{}-{}.txt", self.as_mix_recipient().identity(), random_tag);
+        self.filename = Some(filename);
         // channels for inter-component communication
         // TODO: make the channels be internally created by the relevant components
         // rather than creating them here, so say for example the buffer controller would create the request channels

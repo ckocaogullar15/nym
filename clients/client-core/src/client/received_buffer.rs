@@ -1,6 +1,10 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fs::OpenOptions;
+use std::io::{Write, BufReader, BufRead, Error};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::client::reply_key_storage::ReplyKeyStorage;
 use crypto::asymmetric::encryption;
 use crypto::symmetric::stream_cipher;
@@ -39,6 +43,8 @@ struct ReceivedMessagesBufferInner {
     // but perhaps it should be changed to include timestamps of when the message was reconstructed
     // and every now and then remove ids older than X
     recently_reconstructed: HashSet<i32>,
+
+    filename: Option<String>
 }
 
 impl ReceivedMessagesBufferInner {
@@ -59,13 +65,29 @@ impl ReceivedMessagesBufferInner {
             return None;
         }
 
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+        println!("filename unwrapped {}", filename_unwrapped);
+        let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
+            "cannot open file");
+
         let fragment = match self.message_receiver.recover_fragment(&fragment_data) {
             Err(e) => {
                 warn!("failed to recover fragment from raw data: {:?}. The whole underlying message might be corrupted and unrecoverable!", e);
                 return None;
             }
+            
             Ok(frag) => {
+                let start = SystemTime::now();
+                let since_the_epoch = start
+                    .duration_since(UNIX_EPOCH)
+                    .expect("Time went backwards");
+                let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
                 println!("Received message {:?}", frag);
+                file.write_all(format!("original:{:?};time:{:?}\n", frag, in_ms).as_bytes()).expect("write failed");
+                println!("file append success");
                 frag
                         }
         };
@@ -123,6 +145,7 @@ impl ReceivedMessagesBuffer {
     fn new(
         local_encryption_keypair: Arc<encryption::KeyPair>,
         reply_key_storage: ReplyKeyStorage,
+        filename: Option<String>
     ) -> Self {
         ReceivedMessagesBuffer {
             inner: Arc::new(Mutex::new(ReceivedMessagesBufferInner {
@@ -131,6 +154,7 @@ impl ReceivedMessagesBuffer {
                 message_receiver: MessageReceiver::new(),
                 message_sender: None,
                 recently_reconstructed: HashSet::new(),
+                filename
             })),
             reply_key_storage,
         }
@@ -336,6 +360,7 @@ impl FragmentedMessageReceiver {
 pub struct ReceivedMessagesBufferController {
     fragmented_message_receiver: FragmentedMessageReceiver,
     request_receiver: RequestReceiver,
+    filename: Option<String>,
 }
 
 impl ReceivedMessagesBufferController {
@@ -344,9 +369,10 @@ impl ReceivedMessagesBufferController {
         query_receiver: ReceivedBufferRequestReceiver,
         mixnet_packet_receiver: MixnetMessageReceiver,
         reply_key_storage: ReplyKeyStorage,
+        filename: Option<String>,
     ) -> Self {
         let received_buffer =
-            ReceivedMessagesBuffer::new(local_encryption_keypair, reply_key_storage);
+            ReceivedMessagesBuffer::new(local_encryption_keypair, reply_key_storage, filename.clone());
 
         ReceivedMessagesBufferController {
             fragmented_message_receiver: FragmentedMessageReceiver::new(
@@ -354,6 +380,7 @@ impl ReceivedMessagesBufferController {
                 mixnet_packet_receiver,
             ),
             request_receiver: RequestReceiver::new(received_buffer, query_receiver),
+            filename: filename.clone(),
         }
     }
 

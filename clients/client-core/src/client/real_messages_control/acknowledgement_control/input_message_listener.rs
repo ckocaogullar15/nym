@@ -4,7 +4,6 @@
 use std::fs::OpenOptions;
 use std::io::{Write, BufReader, BufRead, Error};
 
-
 use super::action_controller::{Action, ActionSender};
 use super::PendingAcknowledgement;
 use crate::client::reply_key_storage::ReplyKeyStorage;
@@ -137,7 +136,7 @@ where
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
-
+        println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
 

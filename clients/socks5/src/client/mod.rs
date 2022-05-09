@@ -141,6 +141,7 @@ impl NymClient {
             query_receiver,
             mixnet_receiver,
             reply_key_storage,
+            None
         )
         .start()
     }

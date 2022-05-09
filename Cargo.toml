@@ -72,3 +72,4 @@ default-members = [
 ]
 
 exclude = ["explorer", "contracts", "tokenomics-py", "clients/webassembly"]
+
