@@ -69,7 +69,7 @@ impl ReceivedMessagesBufferInner {
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
-        println!("filename unwrapped {}", filename_unwrapped);
+        // println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
 
@@ -85,9 +85,9 @@ impl ReceivedMessagesBufferInner {
                     .duration_since(UNIX_EPOCH)
                     .expect("Time went backwards");
                 let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
-                println!("Received message {:?}", frag);
+                // println!("Received message {:?}", frag);
                 file.write_all(format!("original:{:?};time:{:?}\n", frag, in_ms).as_bytes()).expect("write failed");
-                println!("file append success");
+                // println!("file append success");
                 frag
                         }
         };
@@ -139,13 +139,14 @@ struct ReceivedMessagesBuffer {
     /// Storage containing keys to all [`ReplySURB`]s ever sent out that we did not receive back.
     // There's no need to put it behind a Mutex since it's already properly concurrent
     reply_key_storage: ReplyKeyStorage,
+    filename: String,
 }
 
 impl ReceivedMessagesBuffer {
     fn new(
         local_encryption_keypair: Arc<encryption::KeyPair>,
         reply_key_storage: ReplyKeyStorage,
-        filename: Option<String>
+        filename: String
     ) -> Self {
         ReceivedMessagesBuffer {
             inner: Arc::new(Mutex::new(ReceivedMessagesBufferInner {
@@ -154,9 +155,10 @@ impl ReceivedMessagesBuffer {
                 message_receiver: MessageReceiver::new(),
                 message_sender: None,
                 recently_reconstructed: HashSet::new(),
-                filename
+                filename: Some(filename.clone()),
             })),
             reply_key_storage,
+            filename,
         }
     }
 
@@ -205,6 +207,7 @@ impl ReceivedMessagesBuffer {
     }
 
     fn process_received_reply(
+        &self,
         reply_ciphertext: &[u8],
         reply_key: SurbEncryptionKey,
     ) -> Option<ReconstructedMessage> {
@@ -215,11 +218,23 @@ impl ReceivedMessagesBuffer {
             &zero_iv,
             reply_ciphertext,
         );
+
+    
+        let mut file = OpenOptions::new().append(true).open(&self.filename).expect(
+            "cannot open file");
+
+
         if let Err(err) = MessageReceiver::remove_padding(&mut reply_msg) {
             warn!("Received reply had malformed padding! - {:?}", err);
             None
         } else {
+            let start = SystemTime::now();
+            let since_the_epoch = start
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards");
+            let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
             // TODO: perhaps having to say it doesn't have a surb an indication the type should be changed?
+            file.write_all(format!("original:{:?};time:{:?}\n", reply_msg, in_ms).as_bytes()).expect("write failed");
             Some(ReconstructedMessage {
                 message: reply_msg,
                 reply_surb: None,
@@ -257,6 +272,7 @@ impl ReceivedMessagesBuffer {
                 .expect("storage operation failed!")
             {
                 if let Some(completed_message) = Self::process_received_reply(
+                    &self,
                     &msg[reply_surb_digest_size..],
                     reply_encryption_key,
                 ) {
@@ -371,8 +387,13 @@ impl ReceivedMessagesBufferController {
         reply_key_storage: ReplyKeyStorage,
         filename: Option<String>,
     ) -> Self {
+        let filename_clone = filename.clone();
+        let filename_unwrapped = match filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
         let received_buffer =
-            ReceivedMessagesBuffer::new(local_encryption_keypair, reply_key_storage, filename.clone());
+            ReceivedMessagesBuffer::new(local_encryption_keypair, reply_key_storage, filename_unwrapped);
 
         ReceivedMessagesBufferController {
             fragmented_message_receiver: FragmentedMessageReceiver::new(
@@ -380,7 +401,7 @@ impl ReceivedMessagesBufferController {
                 mixnet_packet_receiver,
             ),
             request_receiver: RequestReceiver::new(received_buffer, query_receiver),
-            filename: filename.clone(),
+            filename: filename_clone,
         }
     }
 

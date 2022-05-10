@@ -102,7 +102,7 @@ impl MixTrafficController {
 
     pub async fn run(&mut self) {
         while let Some(real_mix_packets) = self.mix_rx_real.next().await {
-            println!("On real messages");
+            // println!("On real messages");
             self.on_real_messages(real_mix_packets).await;
         }
         while let Some(mix_packets) = self.mix_rx.next().await {

@@ -664,7 +664,7 @@ impl GatewayClient {
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
-        println!("filename unwrapped {}", filename_unwrapped);
+        // println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
         
@@ -673,9 +673,9 @@ impl GatewayClient {
             .map(|mix_packet| {
                 let tag: u32 = rng.gen();
                 packet_tags.push(tag);
-                println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
+                // println!("{} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
                 file.write_all(format!("tag_payload;tag:{};payload:{:?}\n", tag, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
-                println!("file append success");
+                // println!("file append success");
                 BinaryRequest::new_forward_request(mix_packet).into_ws_message(
                     self.shared_key
                         .as_ref()
@@ -699,11 +699,11 @@ impl GatewayClient {
                 let since_the_epoch = start
                     .duration_since(UNIX_EPOCH)
                     .expect("Time went backwards");
-                println!("{:?}", since_the_epoch);
+                // println!("{:?}", since_the_epoch);
                 let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
-                println!("{} was sent", tag);
+                // println!("{} was sent", tag);
                 file.write_all(format!("tag_time;tag:{};time:{}\n", tag, in_ms).as_bytes()).expect("write failed");
-                println!("file append success");
+                // println!("file append success");
             };
             Ok(())
         }
@@ -735,7 +735,7 @@ impl GatewayClient {
             None => String::from(' '), 
         };
         // let fin = self.filename.unwrap().clone();
-        println!("filename unwrapped {}", filename_unwrapped);
+        // println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
             
@@ -751,11 +751,11 @@ impl GatewayClient {
             let since_the_epoch = start
                 .duration_since(UNIX_EPOCH)
                 .expect("Time went backwards");
-            println!("{:?}", since_the_epoch);
+            // println!("{:?}", since_the_epoch);
             let in_ms = since_the_epoch.as_secs() * 1000 + since_the_epoch.subsec_nanos() as u64 / 1_000_000;
-            println!("{} was sent", tag);
+            // println!("{} was sent", tag);
             file.write_all(format!("tag_time;tag:{};time:{}\n", tag, in_ms).as_bytes()).expect("write failed");
-            println!("file append success");
+            // println!("file append success");
             Ok(())
         }
     }
@@ -853,13 +853,13 @@ impl GatewayClient {
             None => String::from(' '), 
         };
         // let fin = self.filename.unwrap().clone();
-        println!("filename unwrapped {}", filename_unwrapped);
+        // println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
          file.write_all(format!("tag_payload;tag:{};payload:{:?}\n", tag, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
-         println!("file append success");
+        //  println!("file append success");
 
-        println!("CEREN {} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
+        // println!("CEREN {} {:?}", tag, mix_packet.sphinx_packet().payload.as_bytes());
 
         let msg = BinaryRequest::new_forward_request(mix_packet).into_ws_message(
             self.shared_key

@@ -80,6 +80,16 @@ where
             }
         };
 
+        let filename_unwrapped = match &self.filename {
+            Some(s) => s.clone(),
+            None => String::from(' '), 
+        };
+        // println!("filename unwrapped {}", filename_unwrapped);
+        let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
+            "cannot open file");
+
+        let data_clone = data.clone();
+
         match self
             .message_preparer
             .prepare_reply_for_use(data, reply_surb, topology, &self.ack_key)
@@ -89,6 +99,7 @@ where
                 // TODO: later probably write pending ack here
                 // and deal with them....
                 // ... somehow
+                file.write_all(format!("original_payload;original:{:?};payload:{:?}\n", data_clone, mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
                 Some(RealMessage::new(mix_packet, reply_id))
             }
             Err(err) => {
@@ -132,11 +143,12 @@ where
         // encrypt chunks, put them inside sphinx packets and generate acks
         let mut pending_acks = Vec::with_capacity(split_message.len());
         let mut real_messages = Vec::with_capacity(split_message.len());
+        
         let filename_unwrapped = match &self.filename {
             Some(s) => s.clone(),
             None => String::from(' '), 
         };
-        println!("filename unwrapped {}", filename_unwrapped);
+        // println!("filename unwrapped {}", filename_unwrapped);
         let mut file = OpenOptions::new().append(true).open(&filename_unwrapped).expect(
             "cannot open file");
 
@@ -144,15 +156,17 @@ where
             // we need to clone it because we need to keep it in memory in case we had to retransmit
             // it. And then we'd need to recreate entire ACK again.
             let chunk_clone = message_chunk.clone();
-            let chunk_clone2 = message_chunk.clone();
+            let chunk_clone2 = chunk_clone.clone();
+            
             let prepared_fragment = self
                 .message_preparer
                 .prepare_chunk_for_sending(chunk_clone, topology, &self.ack_key, &recipient)
                 .await
                 .unwrap();
-            println!("Original message {:?}, Sphinx payload {:?}", chunk_clone2, prepared_fragment.mix_packet.sphinx_packet().payload);
+            // println!("Original message {:?}, Sphinx payload {:?}", chunk_clone2, prepared_fragment.mix_packet.sphinx_packet().payload);
+            
             file.write_all(format!("original_payload;original:{:?};payload:{:?}\n", chunk_clone2, prepared_fragment.mix_packet.sphinx_packet().payload.as_bytes()).as_bytes()).expect("write failed");
-            println!("file append success");
+            // println!("file append success");
 
             real_messages.push(RealMessage::new(
                 prepared_fragment.mix_packet,

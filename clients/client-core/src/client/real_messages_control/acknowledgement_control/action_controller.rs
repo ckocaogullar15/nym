@@ -1,6 +1,9 @@
 // Copyright 2021 - Nym Technologies SA <contact@nymtech.net>
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fs::OpenOptions;
+use std::io::{Write, BufReader, BufRead, Error};
+
 use super::PendingAcknowledgement;
 use crate::client::real_messages_control::acknowledgement_control::RetransmissionRequestSender;
 use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
@@ -122,14 +125,15 @@ impl ActionController {
     fn handle_insert(&mut self, pending_acks: Vec<PendingAcknowledgement>) {
         for pending_ack in pending_acks {
             let frag_id = pending_ack.message_chunk.fragment_identifier();
-            trace!("{} is inserted", frag_id);
-
             if self
                 .pending_acks_data
                 .insert(frag_id, (Arc::new(pending_ack), None))
                 .is_some()
-            {
-                panic!("Tried to insert duplicate pending ack")
+            {   
+                let mut file = OpenOptions::new().create_new(true).append(true).open("fragments.txt").expect(
+                    "cannot open file");
+                file.write_all(format!("Tried to insert duplicate pending ack {:?} into {:?}", frag_id, self.pending_acks_data.keys()).as_bytes()).expect("write failed");
+                panic!("Tried to insert duplicate pending ack {:?} into {:?}", frag_id, self.pending_acks_data.keys())
             }
         }
     }
